@@ -8,6 +8,7 @@
 |------|------|
 | `attention.py` | 单头 Self-Attention + 因果掩码（Causal Mask） |
 | `multi_head_attention.py` | 多头 Self-Attention |
+| `kv_cache.py` | KV Cache — 自回归生成推理加速原理 |
 
 ## 运行
 
@@ -15,6 +16,7 @@
 pip install numpy
 python attention.py
 python multi_head_attention.py
+python kv_cache.py
 ```
 
 ---

@@ -1,8 +1,11 @@
 # Attention From Scratch
 
-> 纯 NumPy 实现 Transformer Attention 机制 — 从零手写，不依赖 PyTorch / TensorFlow。
-> 覆盖 Self-Attention、多头注意力、因果掩码、KV Cache、位置编码、完整 Transformer Block。
-> 目的是**彻底搞懂 Attention 的计算过程**，而不是当一个框架的搬运工。
+> 从零实现 Transformer Attention 机制，理解底层原理，掌握框架使用。
+> 项目包含**两个独立实现**：
+> - **NumPy 版** — 逐行手写，理解每一步的计算过程
+> - **PyTorch 版** — 用框架 API 重写，感受封装 vs 手写的差异，掌握 PyTorch 工程实践
+> 
+> 覆盖 Self-Attention、多头注意力、因果掩码、KV Cache、位置编码、完整 Transformer Block、Cross-Attention、Encoder-Decoder 完整架构、训练流程。
 
 ## 项目动机
 
@@ -12,8 +15,13 @@ Transformer 架构的核心是 Attention 机制，但主流框架（PyTorch、Te
 - 因果掩码是如何遮住未来位置的？
 - 多头注意力中的"头"是怎么拆分和合并的？
 - KV Cache 为什么能加速推理？加速了多少？
+- Encoder-Decoder 之间 Cross-Attention 如何连接？
 
-本项目用 **纯 NumPy** 逐行实现这些过程，每一步都可以打印出中间张量的形状，直观理解 Attention 的计算本质。
+为此项目提供**两个视角**：
+
+**NumPy 版：** 用纯 NumPy 逐行实现这些过程，每一步都可以打印出中间张量的形状，直观理解 Attention 的计算本质。适合**理解原理**。
+
+**PyTorch 版：** 用 PyTorch 的 `nn.Linear`、`nn.Module`、自动微分、优化器重写同一套逻辑，感受框架封装带来的代码量减少和训练能力。适合**框架实践**。
 
 ## 文件说明
 
@@ -262,7 +270,9 @@ utils.py ← 所有文件从这里 import
 ## 后续计划
 
 - [x] PyTorch 版实现（pytorch/ 目录，与 NumPy 版一一对应）
+- [x] PyTorch 训练流程（LM Head + Teacher Forcing 训练）
 - [x] 交叉注意力（Cross-Attention）— Encoder-Decoder 架构
+- [ ] PyTorch 实战：加载真实数据集训练语言模型
 - [ ] KV Cache 的进一步优化：PagedAttention、MQA、GQA
 - [ ] Flash Attention 原理与数值对比
 - [ ] RoPE（旋转位置编码）实现

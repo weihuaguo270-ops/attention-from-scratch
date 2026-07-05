@@ -114,6 +114,12 @@ python multi_head_attention.py  # 可独立运行
 
 两版对比可以直观感受框架封装 vs 手写的差异：PyTorch 版代码量更少（`nn.Linear` / `F.softmax` 替代手写）、支持自动微分、可跑在 GPU 上；NumPy 版每一步运算都暴露在外，适合理解原理。
 
+此外，项目还提供了包含 **完整训练流程** 的 [`pytorch/train_transformer.py`](./pytorch/train_transformer.py)：
+
+- 完整的 Encoder-Decoder 模型（含 Token Embedding、LM Head）
+- Teacher Forcing 训练（CrossEntropyLoss + Adam 优化器）
+- 训练 200 epoch 后 Acc 100%，Teacher Forcing 测试全部通过
+
 ---
 
 ### 运行示例

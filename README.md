@@ -223,7 +223,31 @@ PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
 输入 → Positional Encoding → Multi-Head Attention → 残差 + LayerNorm → FFN → 残差 + LayerNorm → 输出
 ```
 
-`transformer_block.py` 包含了完整的 Block，可堆叠 N 层。
+`transformer_block.py` 包含了完整的 Block，可堆叠 N 层。这是 Decoder-only 架构（GPT 风格）。
+
+### 7. Cross-Attention（`cross_attention.py`）
+
+与 Self-Attention 的区别：Q 来自 Decoder 当前输出，K/V 来自 Encoder 的输出。Encoder 和 Decoder 之间的桥梁，是翻译/摘要任务的核心机制。
+
+### 8. Encoder Block（`encoder_block.py`）
+
+双向 Self-Attention（无因果掩码），每个词看到整个句子。适用场景：理解整句话（BERT 风格）。
+
+### 9. Encoder-Decoder 完整架构（`encoder_decoder.py`）
+
+将 Encoder × N 层 + Decoder × N 层（含 Cross-Attention）串联：Encoder 编码原句子 → Decoder 通过 Cross-Attention 逐词生成译文。结构：
+
+```
+Encoder:  双向 Self-Attention → +残差 → LayerNorm → FFN → +残差 → LayerNorm
+Decoder:  Self-Attention(因果掩码) → +残差 → LayerNorm → Cross-Attention → +残差 → LayerNorm → FFN → +残差 → LayerNorm
+```
+
+### 10. 训练流程（`pytorch/train_transformer.py`）
+
+完整的 PyTorch 训练 Pipeline：
+- Token Embedding + Positional Encoding → Encoder → Decoder → **LM Head** → vocab 概率
+- Teacher Forcing 训练（CrossEntropyLoss + Adam）
+- 200 epoch 后 Acc 100%
 
 ## 架构总览
 
@@ -302,6 +326,23 @@ utils.py ← 所有文件从这里 import
   ├── kv_cache.py
   ├── positional_encoding.py
   └── transformer_block.py ← 还 import 了 multi_head_attention.py
+
+cross_attention.py ← 独立，不依赖其他模块（只依赖 utils.py）
+encoder_block.py ← import multi_head_attention.py + utils.py
+encoder_decoder.py ← import encoder_block.py + cross_attention.py
+
+pytorch/ 目录 ← 与根目录结构完全对应，每个文件有 PyTorch 版
+  ├── utils.py
+  ├── attention.py
+  ├── multi_head_attention.py
+  ├── kv_cache.py
+  ├── positional_encoding.py
+  ├── transformer_block.py
+  ├── cross_attention.py
+  ├── encoder_block.py
+  ├── encoder_decoder.py
+  ├── train_transformer.py  ← 额外：完整训练流程
+  └── test_all.py
 ```
 
 每个文件独立可运行，按顺序阅读效果最佳。

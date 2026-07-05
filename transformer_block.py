@@ -1,16 +1,27 @@
 """
 完整 Transformer Block — 纯 NumPy 实现
 
-┌─────────────────────────────────────────────────────────┐
-│ 这是一个完整的 Transformer 层（Decoder layer）           │
-│                                                         │
-│ 输入 → Multi-Head Self-Attention → +残差 → LayerNorm    │
-│                                      → FFN → +残差 → LayerNorm → 输出
-│                                                         │
-│ 每个子层的结构:                                          │
-│   sublayer(x) = LayerNorm(x + Sublayer(x))              │
-│                 ↑ 残差          ↑ Attention 或 FFN      │
-└─────────────────────────────────────────────────────────┘
+这是一个 Decoder layer，使用因果掩码实现自回归生成。
+
+结构:
+  输入
+    ↓
+  Multi-Head Self-Attention（含因果掩码）
+    ↓
+  + 残差连接
+    ↓
+  Layer Normalization
+    ↓
+  Feed-Forward Network (FFN)
+    ↓
+  + 残差连接
+    ↓
+  Layer Normalization
+    ↓
+  输出
+
+注意: 这是 Decoder 的 Self-Attention（带因果掩码），
+     不是 Encoder 的双向 Attention（不带掩码）。
 """
 import numpy as np
 from utils import layer_norm

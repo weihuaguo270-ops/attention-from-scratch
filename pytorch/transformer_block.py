@@ -1,6 +1,11 @@
 """
 PyTorch 版完整 Transformer Block — 与 NumPy 版 transformer_block.py 对应
 
+Decoder layer，使用因果掩码实现自回归生成。
+
+结构:
+  输入 → Self-Attention(因果掩码) → +残差 → LayerNorm → FFN → +残差 → LayerNorm → 输出
+
 用 nn.Module 封装，支持自动微分和 GPU。
 """
 import torch

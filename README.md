@@ -255,34 +255,13 @@ Decoder:  Self-Attention(因果掩码) → +残差 → LayerNorm → Cross-Atten
 
 适用于自回归生成（GPT 风格）。
 
-![Decoder-only 架构](https://excalidraw.com/#json=uSrZY8JVpiZd__MNv1JSR,ws7MF4pzn5tiJKKB_6upHw)
-
-```
-  输入 → Positional Encoding → Transformer Block × N → KV Cache → 输出
-  ┌────────────────────────────────────────────────────────────┐
-  │ 每层: Self-Attention(因果掩码) → +残差+LayerNorm → FFN    │
-  │       → +残差+LayerNorm                                    │
-  └────────────────────────────────────────────────────────────┘
-```
+![Decoder-only 架构](./docs/decoder_only.svg)
 
 ### Encoder-Decoder（`encoder_decoder.py`）
 
 适用于翻译、摘要等需要"理解输入再生成"的任务。Decoder 自回归逐词生成。
 
-![Encoder-Decoder 架构](https://excalidraw.com/#json=G8ku8aRjH6W4VPnGToYGg,LT7tMUYzTTSgvULFUDRyNA)
-
-```
-Encoder:                     Decoder（自回归逐词生成）:
-  原句子 → PE → Encoder×N     [<BOS>] → PE → Self-Attn → Cross-Attn → FFN → LM Head
-                              ↓
-                     拼回输入 ← 取概率最大的词
-                              ↓
-                          完整译文
-```
-
-### 模块总览
-
-![模块总览](https://excalidraw.com/#json=UAUrkmcPT3sxWzUgn4xbN,KOoq99EUofpKpcAO9c64BQ)
+![Encoder-Decoder 架构](./docs/encoder_decoder.svg)
 
 **自回归生成循环（推理时）：**
 

@@ -1,0 +1,318 @@
+{
+  "type": "excalidraw",
+  "version": 2,
+  "source": "hermes-agent",
+  "elements": [
+    {
+      "type": "text", "id": "title",
+      "x": 0, "y": 0, "width": 400, "height": 30,
+      "text": "Attention From Scratch — 项目模块总览",
+      "fontSize": 22, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "originalText": "Attention From Scratch — 项目模块总览", "autoResize": true
+    },
+    {
+      "type": "text", "id": "col1",
+      "x": 0, "y": 50, "width": 200, "height": 25,
+      "text": "NumPy 版",
+      "fontSize": 20, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "originalText": "NumPy 版", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_utils",
+      "x": 0, "y": 90, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#c3fae8", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_utils", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_utils",
+      "x": 10, "y": 98, "width": 130, "height": 25,
+      "text": "utils.py",
+      "fontSize": 16, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_utils", "originalText": "utils.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_attn",
+      "x": 0, "y": 150, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#a5d8ff", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_attn", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_attn",
+      "x": 10, "y": 158, "width": 130, "height": 25,
+      "text": "attention.py",
+      "fontSize": 16, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_attn", "originalText": "attention.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_mha",
+      "x": 0, "y": 210, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#a5d8ff", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_mha", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_mha",
+      "x": 10, "y": 218, "width": 130, "height": 25,
+      "text": "multi_head_attn.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_mha", "originalText": "multi_head_attn.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_kv",
+      "x": 0, "y": 270, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#ffd8a8", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_kv", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_kv",
+      "x": 10, "y": 278, "width": 130, "height": 25,
+      "text": "kv_cache.py",
+      "fontSize": 16, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_kv", "originalText": "kv_cache.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_pe",
+      "x": 0, "y": 330, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#ffd8a8", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_pe", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_pe",
+      "x": 10, "y": 338, "width": 130, "height": 25,
+      "text": "positional_enc.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_pe", "originalText": "positional_enc.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_tb",
+      "x": 0, "y": 390, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#d0bfff", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_tb", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_tb",
+      "x": 10, "y": 398, "width": 130, "height": 25,
+      "text": "transformer_block.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_tb", "originalText": "transformer_block.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_ca",
+      "x": 0, "y": 450, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#ffc9c9", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_ca", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_ca",
+      "x": 10, "y": 458, "width": 130, "height": 25,
+      "text": "cross_attention.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_ca", "originalText": "cross_attention.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_eb",
+      "x": 0, "y": 510, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#d0bfff", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_eb", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_eb",
+      "x": 10, "y": 518, "width": 130, "height": 25,
+      "text": "encoder_block.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_eb", "originalText": "encoder_block.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_ed",
+      "x": 0, "y": 570, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#b2f2bb", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_ed", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_ed",
+      "x": 10, "y": 578, "width": 130, "height": 25,
+      "text": "encoder_decoder.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_ed", "originalText": "encoder_decoder.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "np_test",
+      "x": 0, "y": 630, "width": 150, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#fff3bf", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_np_test", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_np_test",
+      "x": 10, "y": 638, "width": 130, "height": 25,
+      "text": "test_all.py",
+      "fontSize": 16, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "np_test", "originalText": "test_all.py", "autoResize": true
+    },
+    {
+      "type": "text", "id": "col2",
+      "x": 230, "y": 50, "width": 200, "height": 25,
+      "text": "PyTorch 版",
+      "fontSize": 20, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "originalText": "PyTorch 版", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_utils",
+      "x": 230, "y": 90, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#c3fae8", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_utils", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_utils",
+      "x": 240, "y": 98, "width": 160, "height": 25,
+      "text": "pytorch/utils.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_utils", "originalText": "pytorch/utils.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_attn",
+      "x": 230, "y": 150, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#a5d8ff", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_attn", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_attn",
+      "x": 240, "y": 158, "width": 160, "height": 25,
+      "text": "pytorch/attention.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_attn", "originalText": "pytorch/attention.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_mha",
+      "x": 230, "y": 210, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#a5d8ff", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_mha", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_mha",
+      "x": 240, "y": 218, "width": 160, "height": 25,
+      "text": "pytorch/multi_head_attn.py",
+      "fontSize": 13, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_mha", "originalText": "pytorch/multi_head_attn.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_kv",
+      "x": 230, "y": 270, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#ffd8a8", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_kv", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_kv",
+      "x": 240, "y": 278, "width": 160, "height": 25,
+      "text": "pytorch/kv_cache.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_kv", "originalText": "pytorch/kv_cache.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_pe",
+      "x": 230, "y": 330, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#ffd8a8", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_pe", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_pe",
+      "x": 240, "y": 338, "width": 160, "height": 25,
+      "text": "pytorch/positional_enc.py",
+      "fontSize": 13, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_pe", "originalText": "pytorch/positional_enc.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_tb",
+      "x": 230, "y": 390, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#d0bfff", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_tb", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_tb",
+      "x": 240, "y": 398, "width": 160, "height": 25,
+      "text": "pytorch/transformer_block.py",
+      "fontSize": 13, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_tb", "originalText": "pytorch/transformer_block.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_ca",
+      "x": 230, "y": 450, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#ffc9c9", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_ca", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_ca",
+      "x": 240, "y": 458, "width": 160, "height": 25,
+      "text": "pytorch/cross_attention.py",
+      "fontSize": 13, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_ca", "originalText": "pytorch/cross_attention.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_eb",
+      "x": 230, "y": 510, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#d0bfff", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_eb", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_eb",
+      "x": 240, "y": 518, "width": 160, "height": 25,
+      "text": "pytorch/encoder_block.py",
+      "fontSize": 13, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_eb", "originalText": "pytorch/encoder_block.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_ed",
+      "x": 230, "y": 570, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#b2f2bb", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_ed", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_ed",
+      "x": 240, "y": 578, "width": 160, "height": 25,
+      "text": "pytorch/encoder_decoder.py",
+      "fontSize": 13, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_ed", "originalText": "pytorch/encoder_decoder.py", "autoResize": true
+    },
+    {
+      "type": "rectangle", "id": "torch_train",
+      "x": 230, "y": 630, "width": 180, "height": 40,
+      "roundness": { "type": 3 }, "backgroundColor": "#b2f2bb", "fillStyle": "solid",
+      "boundElements": [{ "id": "t_torch_train", "type": "text" }]
+    },
+    {
+      "type": "text", "id": "t_torch_train",
+      "x": 240, "y": 638, "width": 160, "height": 25,
+      "text": "pytorch/train.py",
+      "fontSize": 14, "fontFamily": 1, "strokeColor": "#1e1e1e",
+      "textAlign": "center", "verticalAlign": "middle",
+      "containerId": "torch_train", "originalText": "pytorch/train.py", "autoResize": true
+    },
+    {
+      "type": "text", "id": "color_legend",
+      "x": 0, "y": 690, "width": 400, "height": 120,
+      "text": "颜色图例:\n蓝色 = Attention 核心模块\n橙色 = 位置编码 / KV Cache\n紫色 = Block 封装\n红色 = Cross-Attention\n绿色 = 输出/训练\n青色 = 工具函数\n黄色 = 测试",
+      "fontSize": 13, "fontFamily": 1, "strokeColor": "#868e96",
+      "originalText": "颜色图例", "autoResize": true
+    }
+  ],
+  "appState": {
+    "viewBackgroundColor": "#ffffff"
+  }
+}

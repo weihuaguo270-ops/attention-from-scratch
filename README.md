@@ -251,94 +251,51 @@ Decoder:  Self-Attention(因果掩码) → +残差 → LayerNorm → Cross-Atten
 
 ## 架构总览
 
-### Decoder-only（`transformer_block.py`）
+> 以下架构图使用 [Excalidraw](https://excalidraw.com) 绘制。
+> 拖拽对应的 `.excalidraw` 文件到 excalidraw.com 即可查看和编辑。
+
+### Decoder-only（`transformer_block.py`）→ [`docs/decoder_only.excalidraw`](./docs/decoder_only.excalidraw)
 
 适用于自回归生成（GPT 风格）。
 
 ```
-输入 (seq_len, d_model)
-        │
-  [Positional Encoding]          ← positional_encoding.py
-        │
-  ┌────────────────────────┐
-  │ Transformer Block × N   │     ← transformer_block.py
-  │  ┌──────────────────┐   │
-  │  │ Multi-Head        │   │     ← multi_head_attention.py
-  │  │ Self-Attention    │   │
-  │  │  (含因果掩码)      │   │     ← attention.py
-  │  └────────┬─────────┘   │
-  │           ↓              │
-  │  + 残差连接 + LayerNorm  │     ← utils.py (layer_norm)
-  │           ↓              │
-  │  ┌──────────────────┐   │
-  │  │ FFN               │   │     ← transformer_block.py 内
-  │  └────────┬─────────┘   │
-  │           ↓              │
-  │  + 残差连接 + LayerNorm  │
-  └────────────────────────┘
-        │
-  KV Cache（推理时复用）       ← kv_cache.py
-        │
-  输出 → 预测下一个词
+  输入 → Positional Encoding → Transformer Block × N → KV Cache → 输出 → 预测下一个词
+                               ┌─────────────────────────┐
+                               │ 每层:                    │
+                               │  Self-Attention(因果掩码) │
+                               │  + 残差连接 + LayerNorm  │
+                               │  FFN + 残差 + LayerNorm  │
+                               └─────────────────────────┘
 ```
 
-### Encoder-Decoder（`encoder_decoder.py`）
+### Encoder-Decoder（`encoder_decoder.py`）→ [`docs/encoder_decoder.excalidraw`](./docs/encoder_decoder.excalidraw)
 
 适用于翻译、摘要等需要"理解输入再生成"的任务。Decoder 自回归逐词生成。
 
 ```
-原句子 (seq_enc, d_model)
-        │
-  [Positional Encoding]
-        │
-  ┌──────────────┐
-  │ Encoder × N   │
-  │ 双向 Self-Attn │
-  │ (无因果掩码)    │
-  │      ↓         │
-  │ +残差+LayerNorm│
-  │      ↓         │
-  │ FFN → +残差+LN  │
-  └──────┬───────┘
-         │
-   encoder_output
-         │
-         │  ┌─────────────────────────────────────────────┐
-         │  │ 自回归生成循环（重复 N 步）                     │
-         │  │                                              │
-         └──→ 第1步: Decoder 输入 [<BOS>]                   │
-                 │                                         │
-            [Positional Encoding]                          │
-                 │                                         │
-            ┌──────────────────────┐                       │
-            │ Decoder × N           │                       │
-            │  ┌────────────────┐   │                       │
-            │  │ Self-Attention │   │                       │
-            │  │ (因果掩码)      │   │                       │
-            │  └───────┬────────┘   │                       │
-            │          ↓            │                       │
-            │  ┌────────────────┐   │                       │
-            │  │ Cross-Attn    │   │  ← Q=decoder          │
-            │  │ (看原句子)      │   │     K,V=encoder      │
-            │  └───────┬────────┘   │                       │
-            │          ↓            │                       │
-            │  +残差+LayerNorm       │                       │
-            │          ↓            │                       │
-            │  ┌────────────────┐   │                       │
-            │  │ FFN            │   │                       │
-            │  └───────┬────────┘   │                       │
-            │          ↓            │                       │
-            │  +残差+LayerNorm      │                       │
-            └──────────────────────┘                       │
-                       │                                   │
-                  [LM Head]                                │
-                       │                                   │
-                  vocab 概率                               │
-                       │                                   │
-             取概率最大的词 ──────────────────────────────────┘
-                       │
-                 最终输出完整译文
+Encoder:                  Decoder（自回归循环）:
+  原句子                    第1步: [<BOS>]
+    ↓                        ↓
+  Positional Encoding       Positional Encoding
+    ↓                        ↓
+  Encoder Block × N         Self-Attention(因果掩码)
+    ↓                        ↓
+  encoder_output             + 残差 + LayerNorm
+    ↓                        ↓
+  ──K,V 传入每步──→        Cross-Attention(Q=decoder, K,V=encoder)
+                              ↓
+                            + 残差 + LayerNorm
+                              ↓
+                            FFN + 残差 + LayerNorm
+                              ↓
+                            LM Head → vocab 概率
+                              ↓
+                          取概率最大的词 ──→ 拼回输入，继续下一轮
+                              ↓
+                          最终输出完整译文
 ```
+
+### 模块总览 → [`docs/modules_overview.excalidraw`](./docs/modules_overview.excalidraw)
 
 **自回归生成循环（推理时）：**
 

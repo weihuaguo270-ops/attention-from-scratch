@@ -185,6 +185,55 @@ check("3层堆叠稳定", np.all(np.isfinite(x)))
 
 
 # ============================================================
+# 7. cross_attention
+# ============================================================
+print("\n【cross_attention 交叉注意力】")
+from cross_attention import MultiHeadCrossAttention
+
+np.random.seed(42)
+ca = MultiHeadCrossAttention(d_model=8, num_heads=2)
+query = np.random.randn(2, 8)
+key_value = np.random.randn(3, 8)
+out_ca = ca.forward(query, key_value)
+check("Cross-Attn 输出形状", out_ca.shape == (2, 8))
+check("Cross-Attn 输出非零", np.linalg.norm(out_ca) > 0)
+
+# Q 和 KV 长度不同
+query2 = np.random.randn(1, 8)
+out_ca2 = ca.forward(query2, key_value)
+check("Cross-Attn 单步生成", out_ca2.shape == (1, 8))
+
+
+# ============================================================
+# 8. encoder_block
+# ============================================================
+print("\n【encoder_block 编码器】")
+from encoder_block import EncoderBlock
+
+encoder = EncoderBlock(d_model=8, num_heads=2, d_ff=16)
+X_enc = np.random.randn(4, 8)
+out_enc = encoder.forward(X_enc)
+check("Encoder输出形状", out_enc.shape == (4, 8))
+check("Encoder输出稳定", np.all(np.isfinite(out_enc)))
+
+
+# ============================================================
+# 9. encoder_decoder
+# ============================================================
+print("\n【encoder_decoder 完整架构】")
+from encoder_decoder import EncoderDecoder
+
+model = EncoderDecoder(d_model=8, num_heads=2, d_ff=16, num_layers=2)
+source = np.random.randn(3, 8)
+target = np.random.randn(2, 8)
+enc_out = model.encode(source)
+check("Encoder完整输出形状", enc_out.shape == (3, 8))
+dec_out = model.decode(target, enc_out)
+check("Decoder完整输出形状", dec_out.shape == (2, 8))
+check("完整流程稳定", np.all(np.isfinite(dec_out)))
+
+
+# ============================================================
 # 汇总
 # ============================================================
 print(f"\n{'='*50}")

@@ -25,6 +25,9 @@ Transformer 架构的核心是 Attention 机制，但主流框架（PyTorch、Te
 | `kv_cache.py` | KV Cache 推理加速原理 + 速度对比 | ✅ |
 | `positional_encoding.py` | 正弦位置编码（Sinusoidal PE） | ✅ |
 | `transformer_block.py` | 完整 Decoder Block（Attention + 残差 + LayerNorm + FFN） | ✅ |
+| `cross_attention.py` | Cross-Attention（Q 来自 Decoder，K/V 来自 Encoder） | ✅ |
+| `encoder_block.py` | Encoder Block（双向 Attention，无因果掩码） | ✅ |
+| `encoder_decoder.py` | 完整 Encoder-Decoder 架构（2 层编码 + 2 层解码） | ✅ |
 
 ## 安装与运行
 
@@ -53,6 +56,15 @@ python positional_encoding.py
 
 # 5. 完整 Transformer Block
 python transformer_block.py
+
+# 6. Cross-Attention（交叉注意力）
+python cross_attention.py
+
+# 7. Encoder Block（双向 Attention）
+python encoder_block.py
+
+# 8. Encoder-Decoder 完整架构
+python encoder_decoder.py
 ```
 
 ### 运行测试
@@ -88,6 +100,9 @@ python test_all.py
 | KV Cache | `kv_cache.py` | [`pytorch/kv_cache.py`](./pytorch/kv_cache.py) |
 | 位置编码 | `positional_encoding.py` | [`pytorch/positional_encoding.py`](./pytorch/positional_encoding.py) |
 | Transformer Block | `transformer_block.py` | [`pytorch/transformer_block.py`](./pytorch/transformer_block.py) |
+| Cross-Attention | `cross_attention.py` | [`pytorch/cross_attention.py`](./pytorch/cross_attention.py) |
+| Encoder Block | `encoder_block.py` | [`pytorch/encoder_block.py`](./pytorch/encoder_block.py) |
+| Encoder-Decoder | `encoder_decoder.py` | [`pytorch/encoder_decoder.py`](./pytorch/encoder_decoder.py) |
 | 测试 | `test_all.py` | [`pytorch/test_all.py`](./pytorch/test_all.py) |
 
 ```bash
@@ -240,7 +255,7 @@ utils.py ← 所有文件从这里 import
 ## 后续计划
 
 - [x] PyTorch 版实现（pytorch/ 目录，与 NumPy 版一一对应）
-- [ ] 交叉注意力（Cross-Attention）— Encoder-Decoder 架构
+- [x] 交叉注意力（Cross-Attention）— Encoder-Decoder 架构
 - [ ] KV Cache 的进一步优化：PagedAttention、MQA、GQA
 - [ ] Flash Attention 原理与数值对比
 - [ ] RoPE（旋转位置编码）实现

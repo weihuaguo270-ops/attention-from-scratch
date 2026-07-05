@@ -104,6 +104,7 @@ python test_all.py
 | Encoder Block | `encoder_block.py` | [`pytorch/encoder_block.py`](./pytorch/encoder_block.py) |
 | Encoder-Decoder | `encoder_decoder.py` | [`pytorch/encoder_decoder.py`](./pytorch/encoder_decoder.py) |
 | 测试 | `test_all.py` | [`pytorch/test_all.py`](./pytorch/test_all.py) |
+| 训练 | — | [`pytorch/train_transformer.py`](./pytorch/train_transformer.py) |
 
 ```bash
 cd pytorch

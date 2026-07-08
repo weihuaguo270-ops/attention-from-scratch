@@ -5,7 +5,7 @@ Q 来自 query 序列，K/V 来自 key_value 序列。
 """
 import torch
 import torch.nn as nn
-from utils import softmax, split_heads, combine_heads
+from pytorch.utils import softmax, split_heads, combine_heads
 
 
 class MultiHeadCrossAttention(nn.Module):

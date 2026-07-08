@@ -15,7 +15,7 @@ Transformer 架构的核心是 Attention 机制，但主流框架（PyTorch、Te
 - 因果掩码是如何遮住未来位置的？
 - 多头注意力中的"头"是怎么拆分和合并的？
 - KV Cache 为什么能加速推理？加速了多少？
-- **Sinusoidal PE 和 RoPE 有什么区别？**
+- Sinusoidal PE 和 RoPE 有什么区别？
 - Encoder-Decoder 之间 Cross-Attention 如何连接？
 
 为此项目提供**两个视角**：
@@ -33,7 +33,7 @@ Transformer 架构的核心是 Attention 机制，但主流框架（PyTorch、Te
 | `multi_head_attention.py` | 多头 Self-Attention，支持 use_rope 参数 | ✅ |
 | `kv_cache.py` | KV Cache 推理加速原理 + 速度对比 | ✅ |
 | `positional_encoding.py` | 正弦位置编码（Sinusoidal PE） | ✅ |
-| **`rotary.py`** | **RoPE 旋转位置编码 — 4 个演示面板** | **✅ 新增** |
+| `rotary.py` | RoPE 旋转位置编码 — 4 个演示面板 | ✅ |
 | `transformer_block.py` | 完整 Decoder Block，支持 `pos_encoding` 参数切换 Sinusoidal/RoPE | ✅ |
 | `cross_attention.py` | Cross-Attention（Q 来自 Decoder，K/V 来自 Encoder） | ✅ |
 | `encoder_block.py` | Encoder Block（双向 Attention，无因果掩码） | ✅ |
@@ -64,7 +64,7 @@ python kv_cache.py
 # 4. 位置编码
 python positional_encoding.py
 
-# 5. RoPE 旋转位置编码（新增）
+# 5. RoPE 旋转位置编码
 python rotary.py
 
 # 6. 完整 Transformer Block（Sinusoidal PE / RoPE 可切换）
@@ -118,7 +118,7 @@ python test_all.py
 | Encoder-Decoder | `encoder_decoder.py` | [`pytorch/encoder_decoder.py`](./pytorch/encoder_decoder.py) |
 | 测试 | `test_all.py` | [`pytorch/test_all.py`](./pytorch/test_all.py) |
 | 训练 | — | [`pytorch/train_transformer.py`](./pytorch/train_transformer.py) |
-| **位置编码对比** | — | **[`pytorch/compare_pos_encoding.py`](./pytorch/compare_pos_encoding.py) 新增** |
+| **位置编码对比** | — | [`pytorch/compare_pos_encoding.py`](./pytorch/compare_pos_encoding.py) |
 
 ```bash
 cd pytorch
@@ -351,7 +351,7 @@ utils.py ← 所有文件从这里 import
   ├── multi_head_attention.py
   ├── kv_cache.py
   ├── positional_encoding.py
-  ├── rotary.py ← 新增，独立文件，不依赖其他模块
+  ├── rotary.py ← 独立文件，不依赖其他模块
   └── transformer_block.py ← 还 import 了 multi_head_attention.py
 
 cross_attention.py ← 独立，不依赖其他模块（只依赖 utils.py）
@@ -369,7 +369,7 @@ pytorch/ 目录 ← 与根目录结构完全对应，每个文件有 PyTorch 版
   ├── encoder_block.py
   ├── encoder_decoder.py
   ├── train_transformer.py  ← 额外：完整训练流程
-  ├── compare_pos_encoding.py  ← 新增：位置编码对比实验
+  ├── compare_pos_encoding.py  ← 位置编码对比实验
   └── test_all.py
 ```
 

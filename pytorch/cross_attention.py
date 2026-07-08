@@ -31,8 +31,8 @@ class MultiHeadCrossAttention(nn.Module):
             query:    Decoder 当前输出 (seq_len_q, d_model)
             key_value: Encoder 最终输出 (seq_len_kv, d_model)
 
-        返回:
-            (seq_len_q, d_model)
+        Q 从 query 投影（来自 Decoder）
+        K/V 从 key_value 投影（来自 Encoder）
         """
         Q = split_heads(query @ self.Wq, self.num_heads)
         K = split_heads(key_value @ self.Wk, self.num_heads)

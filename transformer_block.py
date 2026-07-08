@@ -6,6 +6,8 @@
 结构:
   输入
     ↓
+  [Sinusoidal PE (可选)] ← 仅在 pos_encoding="sinusoidal" 时
+    ↓
   Multi-Head Self-Attention（含因果掩码）
     ↓
   + 残差连接
@@ -20,8 +22,9 @@
     ↓
   输出
 
-注意: 这是 Decoder 的 Self-Attention（带因果掩码），
-     不是 Encoder 的双向 Attention（不带掩码）。
+位置编码方式通过 pos_encoding 参数控制:
+  - "sinusoidal": 标准 Sinusoidal PE，在输入层加到 X 上（调用者做）
+  - "rope":      RoPE，在 Attention 内部旋转 Q/K（MHA 自己做）
 """
 import numpy as np
 from utils import layer_norm
@@ -47,36 +50,14 @@ class FFN:
     FFN 做的是"每个词独立地深加工"（纵向消化）。
     """
     def __init__(self, d_model, d_ff):
-        """
-        参数:
-            d_model: 输入/输出维度
-            d_ff: 中间隐藏层维度（通常是 d_model × 4）
-        """
-        # W1: 从 d_model 升维到 d_ff
         self.W1 = np.random.randn(d_model, d_ff) * 0.01
         self.b1 = np.zeros(d_ff)
-
-        # W2: 从 d_ff 降维回 d_model
         self.W2 = np.random.randn(d_ff, d_model) * 0.01
         self.b2 = np.zeros(d_model)
 
-        # 注意: * 0.01 是让初始权重足够小，防止一开始数值爆炸
-        #       偏置初始化为 0，让模型自己决定要不要学出非零偏置
-
     def forward(self, x):
-        """
-        前向传播:
-
-        FFN(x) = W2 × ReLU(W1 × x + b1) + b2
-        """
-        # 第 1 层线性变换：升维 (seq_len, d_model) → (seq_len, d_ff)
         hidden = x @ self.W1 + self.b1
-
-        # ReLU 激活函数：所有负数变 0，正数不变
-        # ReLU(x) = max(0, x)
         hidden = np.maximum(0, hidden)
-
-        # 第 2 层线性变换：降维 (seq_len, d_ff) → (seq_len, d_model)
         output = hidden @ self.W2 + self.b2
         return output
 
@@ -104,79 +85,77 @@ class TransformerBlock:
       - 公式: LN(x) = (x - mean) / (std + eps)
       - 对每个词的向量独立做标准化，让均值≈0，标准差≈1
       - 让训练更稳定，防止数值过大或过小
+
+    位置编码:
+      - pos_encoding="sinusoidal": 标准 Sinusoidal PE，在 forward 入口处加到输入
+      - pos_encoding="rope":      RoPE，Attention 内部旋转 Q/K
     """
-    def __init__(self, d_model, num_heads, d_ff):
+    def __init__(self, d_model, num_heads, d_ff, pos_encoding="sinusoidal", max_seq_len=128):
         """
         参数:
             d_model: 向量维度（所有子层的输入输出都是这个维度）
             num_heads: 多头注意力中的头数
             d_ff: FFN 中间层维度
+            pos_encoding: 位置编码方式 ("sinusoidal" 或 "rope")
+            max_seq_len: 最大序列长度（仅 RoPE 需要）
         """
-        # 子层 1: 多头自注意力 — 让每个词看到其他词，融合上下文
-        self.attention = MultiHeadAttention(d_model, num_heads)
+        self.pos_encoding = pos_encoding
 
-        # 子层 2: 前馈网络 — 每个词独立深加工
+        # 子层 1: 多头自注意力
+        if pos_encoding == "rope":
+            self.attention = MultiHeadAttention(
+                d_model, num_heads, use_rope=True, max_seq_len=max_seq_len,
+            )
+        else:
+            self.attention = MultiHeadAttention(d_model, num_heads, use_rope=False)
+
+        # 子层 2: 前馈网络
         self.ffn = FFN(d_model, d_ff)
 
-    def forward(self, x, use_mask=True):
+    def forward(self, x, use_mask=True, positions=None):
         """
         前向传播
-
-        流程:
-        输入 x (seq_len, d_model)
-          ↓
-        ┌──────────────────────────────────────────────┐
-        │ 子层 1: Multi-Head Attention                  │
-        │   attn_out = Attention(x)                      │
-        │   x = x + attn_out         ← 残差连接         │
-        │   x = LayerNorm(x)         ← 层归一化         │
-        └──────────────────────────────────────────────┘
-          ↓
-        ┌──────────────────────────────────────────────┐
-        │ 子层 2: Feed-Forward Network                   │
-        │   ffn_out = FFN(x)                             │
-        │   x = x + ffn_out          ← 残差连接         │
-        │   x = LayerNorm(x)         ← 层归一化         │
-        └──────────────────────────────────────────────┘
-          ↓
-        输出 x (seq_len, d_model) — 给下一层或预测头
 
         参数:
             x: 输入矩阵，shape (seq_len, d_model)
             use_mask: 是否使用因果掩码（True=GPT风格, False=BERT风格）
+            positions: 位置索引，仅 pos_encoding="rope" 时需要
+                       默认 None = [0, 1, ..., seq_len-1]
 
         返回:
             shape (seq_len, d_model) 的输出
         """
         # ═══════════════════════════════════════════════════
+        # 子层 0（可选）: Sinusoidal PE
+        # ═══════════════════════════════════════════════════
+        # pos_encoding="sinusoidal" 时，在进入 Attention 前加到输入
+        # pos_encoding="rope" 时，什么也不做（MHA 内部自己旋转 Q/K）
+        if self.pos_encoding == "sinusoidal":
+            from positional_encoding import sinusoidal_positional_encoding
+            seq_len = x.shape[0]
+            d_model = x.shape[1]
+            pe = sinusoidal_positional_encoding(seq_len, d_model)
+            x = x + pe
+
+        # ═══════════════════════════════════════════════════
         # 子层 1: Multi-Head Self-Attention + 残差 + LayerNorm
         # ═══════════════════════════════════════════════════
+        if self.pos_encoding == "rope":
+            attn_out = self.attention.forward(x, use_mask, positions=positions)
+        else:
+            attn_out = self.attention.forward(x, use_mask)
 
-        # Attention 输出: 每个词融合了其他词的信息
-        attn_out = self.attention.forward(x, use_mask)
-
-        # 残差连接: 保留原始输入，叠加 Attention 学到的新信息
-        # 即使 attn_out 全为 0，x 也至少保留原始值
         x = x + attn_out
-
-        # 层归一化: 标准化数值范围，稳定训练
         x = layer_norm(x)
 
         # ═══════════════════════════════════════════════════
         # 子层 2: FFN + 残差 + LayerNorm
         # ═══════════════════════════════════════════════════
-
-        # FFN 输出: 每个词独立地"消化吸收"Attention 学到的东西
         ffn_out = self.ffn.forward(x)
-
-        # 残差连接
         x = x + ffn_out
-
-        # 层归一化
         x = layer_norm(x)
 
         return x
-        # 输出 shape 跟输入一样 (seq_len, d_model)，所以可以堆叠多层
 
 
 # ============================================================
@@ -187,38 +166,42 @@ if __name__ == "__main__":
     print("完整 Transformer Block 演示")
     print("=" * 60)
 
-    d_model = 8       # 向量维度
-    num_heads = 2     # 头数
-    d_ff = 16         # FFN 中间维度
-    seq_len = 4       # 序列长度（词数）
+    d_model = 8
+    num_heads = 2
+    d_ff = 16
+    seq_len = 4
 
     np.random.seed(42)
     X = np.random.randn(seq_len, d_model)
 
-    print(f"\n配置: d_model={d_model}, num_heads={num_heads}, d_ff={d_ff}")
+    # --- 验证模式 A: Sinusoidal PE ---
+    print(f"\n--- 模式 A: Sinusoidal PE ---")
+    print(f"配置: d_model={d_model}, num_heads={num_heads}, d_ff={d_ff}")
     print(f"输入 shape: {X.shape}")
 
-    # 创建一层 Transformer Block
-    block = TransformerBlock(d_model, num_heads, d_ff)
-    output = block.forward(X, use_mask=True)
+    block_sin = TransformerBlock(d_model, num_heads, d_ff, pos_encoding="sinusoidal")
+    output_sin = block_sin.forward(X, use_mask=True)
 
-    print(f"输出 shape: {output.shape}")
-    print("输入输出 shape 一致，所以可以堆叠多层")
+    print(f"输出 shape: {output_sin.shape}")
+    print(f"位置编码方式: Sinusoidal PE（在 Block 入口加到输入）")
 
-    # 堆叠 2 层: 每层的输出作为下一层的输入
-    print("\n堆叠 3 层验证稳定性:")
-    x = X
-    norms = []
+    # --- 验证模式 B: RoPE ---
+    print(f"\n--- 模式 B: RoPE ---")
+    block_rope = TransformerBlock(d_model, num_heads, d_ff, pos_encoding="rope")
+    output_rope = block_rope.forward(X, use_mask=True)
+
+    print(f"输出 shape: {output_rope.shape}")
+    print(f"位置编码方式: RoPE（在 Attention 内部旋转 Q/K）")
+
+    # --- 堆叠验证 ---
+    print(f"\n--- 堆叠 3 层验证（两种模式分别测试）---")
+    x_sin = X.copy()
+    x_rope = X.copy()
     for i in range(3):
-        x = block(x, use_mask=True)
-        norm = torch.norm(x).item()
-        norms.append(norm)
-        print(f"  第 {i+1} 层输出范数: {norm:.3f}")
+        x_sin = block_sin.forward(x_sin, use_mask=True)
+        x_rope = block_rope.forward(x_rope, use_mask=True)
+        print(f"  第 {i+1} 层 Sinusoidal: norm={np.linalg.norm(x_sin):.3f}  RoPE: norm={np.linalg.norm(x_rope):.3f}")
 
-    # 实际判断：连续两层范数变化不超过 10 倍就算稳定
-    max_norm = max(norms)
-    min_norm = min(norms)
-    if min_norm > 0.1 and max_norm / min_norm < 10:
-        print("✅ 数值稳定（残差连接 + LayerNorm 在起作用）")
-    else:
-        print(f"⚠️ 数值异常: 范数变化范围 {min_norm:.3f} ~ {max_norm:.3f}")
+    print(f"\nSinusoidal PE: 位置信息在输入层，通过 X+PE 注入")
+    print(f"RoPE:          位置信息在 Attention，通过 Q/K 旋转注入")
+    print(f"两种方式都可以堆叠多层，核心区别是位置信息的作用位置不同")

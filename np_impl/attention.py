@@ -1,29 +1,14 @@
 """
 Self-Attention + 因果掩码 — 纯 NumPy 实现
-
-理解 Attention 最核心的计算过程:
-
-  公式: Attention(Q, K, V) = softmax(QK^T / √d_k) V
-
-  1. Q @ K^T      → 每个词跟所有词的相似度分数
-  2. / √d_k       → 缩放，防止分数太大导致 Softmax 极端化
-  3. + 因果掩码    → 遮住未来位置（GPT 生成时不能偷看）
-  4. Softmax      → 分数转成概率（每行和为 1）
-  5. @ V          → 加权求和，得到每个词的"上下文感知表示"
-
-两种模式:
-  Part A: 无掩码 Self-Attention → 每个词看所有词（BERT 风格）
-  Part B: 因果掩码 Self-Attention → 每个词只看过去+自己（GPT 风格）
 """
+import sys, os
+if __name__ == "__main__" and __package__ is None:
+    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    __package__ = "np_impl"
+
 import numpy as np
-from utils import softmax
+from .utils import softmax
 
-
-# ============================================================
-# 1. 准备输入数据
-# ============================================================
-# 假设输入有 3 个词，每个词用 4 维向量表示
-# 实际场景中，这 4 维是 embedding 层学出来的
 X = np.array([
     [1.0, 2.0, 3.0, 4.0],   # 词0: "猫"
     [2.0, 3.0, 4.0, 5.0],   # 词1: "坐"

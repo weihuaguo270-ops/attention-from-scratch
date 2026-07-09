@@ -27,7 +27,7 @@ def check(name, cond, detail=""):
 # 1. utils
 # ============================================================
 print("\n【utils 工具函数】")
-from utils import softmax, split_heads, combine_heads, layer_norm
+from np_impl.utils import softmax, split_heads, combine_heads, layer_norm
 
 # softmax: 每行和为 1
 x = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
@@ -62,7 +62,7 @@ check("layer_norm 方差≈1",
 # ============================================================
 print("\n【attention 单头 Self-Attention】")
 # 手动执行 attention.py 中的核心逻辑
-from utils import softmax
+from np_impl.utils import softmax
 
 np.random.seed(42)
 d_model, d_k = 4, 3
@@ -97,7 +97,7 @@ check("词2看全部", causal_weights[2, 0] > 0 and causal_weights[2, 2] > 0)
 # 3. multi_head_attention
 # ============================================================
 print("\n【multi_head_attention 多头注意力】")
-from multi_head_attention import MultiHeadAttention
+from np_impl.multi_head_attention import MultiHeadAttention
 
 np.random.seed(42)
 mha = MultiHeadAttention(d_model=8, num_heads=2)
@@ -116,7 +116,7 @@ check("多头+掩码输出形状", out_masked.shape == (4, 8))
 # ============================================================
 print("\n【kv_cache KV Cache 验证】")
 # 验证有 cache 和无 cache 的输出是否一致（值上）
-from utils import softmax
+from np_impl.utils import softmax
 
 def attention_with_cache(Q, K, V, K_cache=None, V_cache=None):
     """简化版 attention，支持 cache"""
@@ -151,7 +151,7 @@ check("KV Cache 第2步一致", np.allclose(out2_cached, out2_nocache, atol=1e-6
 # 5. positional_encoding
 # ============================================================
 print("\n【positional_encoding 位置编码】")
-from positional_encoding import sinusoidal_positional_encoding as positional_encoding
+from np_impl.positional_encoding import sinusoidal_positional_encoding as positional_encoding
 
 pe = positional_encoding(seq_len=10, d_model=8)
 check("位置编码形状", pe.shape == (10, 8))
@@ -169,7 +169,7 @@ check("值域在[-1,1]", np.all(np.abs(pe) <= 1.0 + 1e-6))
 # 6. transformer_block
 # ============================================================
 print("\n【transformer_block 完整 Block】")
-from transformer_block import TransformerBlock
+from np_impl.transformer_block import TransformerBlock
 
 block = TransformerBlock(d_model=8, num_heads=2, d_ff=16)
 X_tb = np.random.randn(4, 8)
@@ -188,7 +188,7 @@ check("3层堆叠稳定", np.all(np.isfinite(x)))
 # 7. cross_attention
 # ============================================================
 print("\n【cross_attention 交叉注意力】")
-from cross_attention import MultiHeadCrossAttention
+from np_impl.cross_attention import MultiHeadCrossAttention
 
 np.random.seed(42)
 ca = MultiHeadCrossAttention(d_model=8, num_heads=2)
@@ -208,7 +208,7 @@ check("Cross-Attn 单步生成", out_ca2.shape == (1, 8))
 # 8. encoder_block
 # ============================================================
 print("\n【encoder_block 编码器】")
-from encoder_block import EncoderBlock
+from np_impl.encoder_block import EncoderBlock
 
 encoder = EncoderBlock(d_model=8, num_heads=2, d_ff=16)
 X_enc = np.random.randn(4, 8)
@@ -221,7 +221,7 @@ check("Encoder输出稳定", np.all(np.isfinite(out_enc)))
 # 9. encoder_decoder
 # ============================================================
 print("\n【encoder_decoder 完整架构】")
-from encoder_decoder import EncoderDecoder
+from np_impl.encoder_decoder import EncoderDecoder
 
 model = EncoderDecoder(d_model=8, num_heads=2, d_ff=16, num_layers=2)
 source = np.random.randn(3, 8)

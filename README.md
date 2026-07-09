@@ -24,70 +24,83 @@ Transformer 架构的核心是 Attention 机制，但主流框架（PyTorch、Te
 
 **PyTorch 版：** 用 PyTorch 的 `nn.Linear`、`nn.Module`、自动微分、优化器重写同一套逻辑，感受框架封装带来的代码量减少和训练能力。适合**框架实践**。
 
-## 文件说明
+## 项目结构
 
-| 文件 | 核心内容 | 可独立运行 |
-|------|---------|:---------:|
-| `utils.py` | softmax、split_heads、combine_heads、layer_norm | ❌ 工具库 |
-| `attention.py` | 单头 Self-Attention + 因果掩码（GPT 风格） | ✅ |
-| `multi_head_attention.py` | 多头 Self-Attention，支持 use_rope 参数 | ✅ |
-| `kv_cache.py` | KV Cache 推理加速原理 + 速度对比 | ✅ |
-| `positional_encoding.py` | 正弦位置编码（Sinusoidal PE） | ✅ |
-| `rotary.py` | RoPE 旋转位置编码 — 4 个演示面板 | ✅ |
-| `transformer_block.py` | 完整 Decoder Block，支持 `pos_encoding` 参数切换 Sinusoidal/RoPE | ✅ |
-| `cross_attention.py` | Cross-Attention（Q 来自 Decoder，K/V 来自 Encoder） | ✅ |
-| `encoder_block.py` | Encoder Block（双向 Attention，无因果掩码） | ✅ |
-| `encoder_decoder.py` | 完整 Encoder-Decoder 架构（2 层编码 + 2 层解码） | ✅ |
-
-## 安装与运行
-
-### 安装
-
-```bash
-pip install numpy
+```
+self_attention/
+├── np_impl/              # NumPy 版（逐行手写，理解原理）
+│   ├── attention.py      # 单头 Self-Attention + 因果掩码
+│   ├── multi_head_attention.py  # 多头 Self-Attention（支持 RoPE）
+│   ├── kv_cache.py        # KV Cache 推理加速
+│   ├── positional_encoding.py  # 正弦位置编码
+│   ├── rotary.py          # RoPE 旋转位置编码
+│   ├── transformer_block.py    # 完整 Decoder Block
+│   ├── cross_attention.py      # Cross-Attention
+│   ├── encoder_block.py        # Encoder Block
+│   ├── encoder_decoder.py      # Encoder-Decoder 完整架构
+│   └── utils.py           # 公共工具函数
+│
+├── pytorch/              # PyTorch 版（框架封装，可训练）
+│   ├── attention.py      # 单头 Self-Attention
+│   ├── multi_head_attention.py  # 多头注意力
+│   ├── kv_cache.py        # KV Cache
+│   ├── positional_encoding.py  # 位置编码
+│   ├── encoder_block.py        # Encoder Block
+│   ├── encoder_decoder.py      # Encoder-Decoder
+│   ├── transformer_block.py    # Decoder Block
+│   ├── cross_attention.py      # Cross-Attention
+│   ├── compare_pos_encoding.py  # Sinusoidal vs RoPE 对比实验
+│   ├── train_transformer.py    # 完整训练流程（200 epoch → Acc 100%）
+│   ├── test_all.py        # PyTorch 版测试
+│   └── utils.py           # PyTorch 版工具函数
+│
+├── test_all.py            # NumPy 版测试（36 项）
+├── pyproject.toml         # 项目配置
+└── README.md
 ```
 
-### 运行
-
-## 快速开始
+## 运行
 
 ```bash
-# 1. 安装依赖
+# 安装依赖
 pip install numpy
 
 # （可选）如需运行 PyTorch 版
 pip install torch
 
-# 2. 运行（任意一个）
-# 单头 Self-Attention + 因果掩码
-python attention.py
+# NumPy 版
+python np_impl/attention.py
 
-# 3. KV Cache 推理加速（含速度对比）
-python kv_cache.py
+# 多头注意力
+python np_impl/multi_head_attention.py
 
-# 4. 位置编码
-python positional_encoding.py
+# KV Cache 推理加速（含速度对比）
+python np_impl/kv_cache.py
 
-# 5. RoPE 旋转位置编码
-python rotary.py
+# 位置编码
+python np_impl/positional_encoding.py
 
-# 6. 完整 Transformer Block（Sinusoidal PE / RoPE 可切换）
-python transformer_block.py
+# RoPE 旋转位置编码
+python np_impl/rotary.py
 
-# 7. Cross-Attention（交叉注意力）
-python cross_attention.py
+# 完整 Transformer Block（Sinusoidal PE / RoPE 可切换）
+python np_impl/transformer_block.py
 
-# 8. Encoder Block（双向 Attention）
-python encoder_block.py
+# Cross-Attention（交叉注意力）
+python np_impl/cross_attention.py
 
-# 9. Encoder-Decoder 完整架构
-python encoder_decoder.py
+# Encoder Block（双向 Attention）
+python np_impl/encoder_block.py
+
+# Encoder-Decoder 完整架构
+python np_impl/encoder_decoder.py
 ```
 
 ### 运行测试
 
 ```bash
-python test_all.py
+python test_all.py                    # NumPy 版 36 项测试
+cd pytorch && python test_all.py      # PyTorch 版 25+ 项测试
 ```
 
 输出示例：
@@ -111,20 +124,21 @@ python test_all.py
 
 | 模块 | NumPy | PyTorch |
 |------|-------|---------|
-| 工具函数 | `utils.py` | [`pytorch/utils.py`](./pytorch/utils.py) |
-| 单头 Attention | `attention.py` | [`pytorch/attention.py`](./pytorch/attention.py) |
-| 多头注意力 | `multi_head_attention.py` | [`pytorch/multi_head_attention.py`](./pytorch/multi_head_attention.py) |
-| KV Cache | `kv_cache.py` | [`pytorch/kv_cache.py`](./pytorch/kv_cache.py) |
-| 位置编码 | `positional_encoding.py` | [`pytorch/positional_encoding.py`](./pytorch/positional_encoding.py) |
-| Transformer Block | `transformer_block.py` | [`pytorch/transformer_block.py`](./pytorch/transformer_block.py) |
-| Cross-Attention | `cross_attention.py` | [`pytorch/cross_attention.py`](./pytorch/cross_attention.py) |
-| Encoder Block | `encoder_block.py` | [`pytorch/encoder_block.py`](./pytorch/encoder_block.py) |
-| Encoder-Decoder | `encoder_decoder.py` | [`pytorch/encoder_decoder.py`](./pytorch/encoder_decoder.py) |
-| 测试 | `test_all.py` | [`pytorch/test_all.py`](./pytorch/test_all.py) |
+| 工具函数 | [`np_impl/utils.py`](./np_impl/utils.py) | [`pytorch/utils.py`](./pytorch/utils.py) |
+| 单头 Attention | [`np_impl/attention.py`](./np_impl/attention.py) | [`pytorch/attention.py`](./pytorch/attention.py) |
+| 多头注意力 | [`np_impl/multi_head_attention.py`](./np_impl/multi_head_attention.py) | [`pytorch/multi_head_attention.py`](./pytorch/multi_head_attention.py) |
+| KV Cache | [`np_impl/kv_cache.py`](./np_impl/kv_cache.py) | [`pytorch/kv_cache.py`](./pytorch/kv_cache.py) |
+| 位置编码 | [`np_impl/positional_encoding.py`](./np_impl/positional_encoding.py) | [`pytorch/positional_encoding.py`](./pytorch/positional_encoding.py) |
+| Transformer Block | [`np_impl/transformer_block.py`](./np_impl/transformer_block.py) | [`pytorch/transformer_block.py`](./pytorch/transformer_block.py) |
+| Cross-Attention | [`np_impl/cross_attention.py`](./np_impl/cross_attention.py) | [`pytorch/cross_attention.py`](./pytorch/cross_attention.py) |
+| Encoder Block | [`np_impl/encoder_block.py`](./np_impl/encoder_block.py) | [`pytorch/encoder_block.py`](./pytorch/encoder_block.py) |
+| Encoder-Decoder | [`np_impl/encoder_decoder.py`](./np_impl/encoder_decoder.py) | [`pytorch/encoder_decoder.py`](./pytorch/encoder_decoder.py) |
+| 测试 | [`test_all.py`](./test_all.py) | [`pytorch/test_all.py`](./pytorch/test_all.py) |
 | 训练 | — | [`pytorch/train_transformer.py`](./pytorch/train_transformer.py) |
 | 位置编码对比 | — | [`pytorch/compare_pos_encoding.py`](./pytorch/compare_pos_encoding.py) |
 
 ```bash
+# PyTorch 版
 cd pytorch
 python test_all.py                     # PyTorch 版 25+ 项测试
 python multi_head_attention.py         # 可独立运行

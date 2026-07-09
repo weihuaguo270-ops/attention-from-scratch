@@ -116,7 +116,7 @@ cd pytorch && python test_all.py      # PyTorch 版 25+ 项测试
 🎉 全部测试通过!
 ```
 
-当前共 **36 项测试**，覆盖 utils / attention / multi_head_attention / kv_cache / positional_encoding / transformer_block 六个模块，**无需外部框架**。
+当前共 **36 项测试**，覆盖 np_impl/utils / attention / multi_head_attention / kv_cache / positional_encoding / transformer_block / cross_attention / encoder_block / encoder_decoder 九个模块，**无需外部框架**。
 
 ### PyTorch 版
 
@@ -156,7 +156,7 @@ python compare_pos_encoding.py         # Sinusoidal vs RoPE 对比实验
 ### 运行示例
 
 ```bash
-$ python attention.py
+$ python np_impl/attention.py
 === Part A: 无掩码 Self-Attention ===
 输入形状: (3, 4)  ← 3个词，每个4维
 Q形状: (3, 3)      ← 3个query，每个3维
@@ -171,7 +171,7 @@ Q形状: (3, 3)      ← 3个query，每个3维
 
 ## 学习路线
 
-### 1. Self-Attention 原理 → `attention.py`
+### 1. Self-Attention 原理 → `np_impl/attention.py`
 
 实现 Attention 计算公式：
 
@@ -213,7 +213,7 @@ def forward(self, Q, K, V):
     # 5. 输出投影
 ```
 
-`multi_head_attention.py` 支持 `use_rope` 参数——设为 `True` 时在拆头后对每个 head 的 Q/K 应用 RoPE 旋转。
+`np_impl/multi_head_attention.py` 支持 `use_rope` 参数——设为 `True` 时在拆头后对每个 head 的 Q/K 应用 RoPE 旋转。
 
 ### 4. KV Cache — 推理加速
 
@@ -226,7 +226,7 @@ KV Cache 把之前算过的 K、V 存起来，每步只算新 token 的 K、V：
 # 有 KV Cache: O(n)  每步只算新的
 ```
 
-`kv_cache.py` 包含自回归循环模拟，直观对比有/无缓存的计算量差异：
+`np_impl/kv_cache.py` 包含自回归循环模拟，直观对比有/无缓存的计算量差异：
 
 ```
 >>> 使用 KV Cache:
@@ -243,7 +243,7 @@ PyTorch 版（`pytorch/kv_cache.py`）逻辑完全一致。
 
 ### 5. 位置编码 — 两种方案对比
 
-#### 5a. Sinusoidal PE（`positional_encoding.py`）
+#### 5a. Sinusoidal PE（`np_impl/positional_encoding.py`）
 
 绝对位置编码：每个位置有唯一的 sin/cos 向量，加到输入上。
 
@@ -254,7 +254,7 @@ PE(pos, 2i+1) = cos(pos / 10000^(2i/d_model))
 
 **核心特征：** 位置信息**独立于 Attention 计算**，通过加法注入。
 
-#### 5b. RoPE（`rotary.py`）
+#### 5b. RoPE（`np_impl/rotary.py`）
 
 相对位置编码：不生成位置向量，而是旋转 Q 和 K，让 Attention 分数本身包含位置差信息。
 
@@ -264,13 +264,13 @@ f(q, pos) = q × cos(pos×θ) + rotate_90(q) × sin(pos×θ)
 
 **核心特征：** 位置信息**编码进 Attention 分数里**，通过旋转 Q/K 实现。
 
-**RoPE 演示（`python rotary.py`）：**
+**RoPE 演示（`python np_impl/rotary.py`）：**
 1. 基础演示 — 旋转 Q 和 K，看到不对称 Attention 分数
 2. 对比 Sinusoidal — 对角线不变性验证
 3. 词序颠倒测试 — 正向和反向句子的 Attention 不同
 4. 长度外推 — 训练 5 个位置，推理扩展到 10
 
-#### 5c. TransformerBlock 可切换（`transformer_block.py`）
+#### 5c. TransformerBlock 可切换（`np_impl/transformer_block.py`）
 
 ```python
 # Sinusoidal PE（默认）
@@ -311,17 +311,17 @@ python pytorch/compare_pos_encoding.py
 输入 → [Positional Encoding] → Multi-Head Attention → 残差 + LayerNorm → FFN → 残差 + LayerNorm → 输出
 ```
 
-`transformer_block.py` 包含了完整的 Block，可堆叠 N 层。这是 Decoder-only 架构（GPT 风格）。
+`np_impl/transformer_block.py` 包含了完整的 Block，可堆叠 N 层。这是 Decoder-only 架构（GPT 风格）。
 
-### 7. Cross-Attention（`cross_attention.py`）
+### 7. Cross-Attention（`np_impl/cross_attention.py`）
 
 与 Self-Attention 的区别：Q 来自 Decoder 当前输出，K/V 来自 Encoder 的输出。Encoder 和 Decoder 之间的桥梁，是翻译/摘要任务的核心机制。
 
-### 8. Encoder Block（`encoder_block.py`）
+### 8. Encoder Block（`np_impl/encoder_block.py`）
 
 双向 Self-Attention（无因果掩码），每个词看到整个句子。适用场景：理解整句话（BERT 风格）。
 
-### 9. Encoder-Decoder 完整架构（`encoder_decoder.py`）
+### 9. Encoder-Decoder 完整架构（`np_impl/encoder_decoder.py`）
 
 将 Encoder × N 层 + Decoder × N 层（含 Cross-Attention）串联：Encoder 编码原句子 → Decoder 通过 Cross-Attention 逐词生成译文。结构：
 
@@ -339,13 +339,13 @@ Decoder:  Self-Attention(因果掩码) → +残差 → LayerNorm → Cross-Atten
 
 ## 架构总览
 
-### Decoder-only（`transformer_block.py`）
+### Decoder-only（`np_impl/transformer_block.py`）
 
 适用于自回归生成（GPT 风格）。
 
 ![Decoder-only 架构](./docs/decoder_only.svg)
 
-### Encoder-Decoder（`encoder_decoder.py`）
+### Encoder-Decoder（`np_impl/encoder_decoder.py`）
 
 适用于翻译、摘要等需要"理解输入再生成"的任务。Decoder 自回归逐词生成。
 
@@ -364,31 +364,31 @@ for step in range(max_len):
 ## 模块依赖关系
 
 ```
-utils.py ← 所有文件从这里 import
-  ├── attention.py
-  ├── multi_head_attention.py
-  ├── kv_cache.py
-  ├── positional_encoding.py
-  ├── rotary.py ← 独立文件，不依赖其他模块
-  └── transformer_block.py ← 还 import 了 multi_head_attention.py
+np_impl/utils.py ← np_impl/ 内所有文件从这里 import
+  ├── np_impl/attention.py
+  ├── np_impl/multi_head_attention.py
+  ├── np_impl/kv_cache.py
+  ├── np_impl/positional_encoding.py
+  ├── np_impl/rotary.py ← 独立，不依赖其他模块
+  └── np_impl/transformer_block.py ← 还 import 了 multi_head_attention.py
 
-cross_attention.py ← 独立，不依赖其他模块（只依赖 utils.py）
-encoder_block.py ← import multi_head_attention.py + utils.py
-encoder_decoder.py ← import encoder_block.py + cross_attention.py
+np_impl/cross_attention.py ← 独立，只依赖 np_impl/utils.py
+np_impl/encoder_block.py ← import np_impl/multi_head_attention.py + utils.py
+np_impl/encoder_decoder.py ← import np_impl/encoder_block.py + cross_attention.py
 
-pytorch/ 目录 ← 与根目录结构完全对应，每个文件有 PyTorch 版
-  ├── utils.py
-  ├── attention.py
-  ├── multi_head_attention.py
-  ├── kv_cache.py
-  ├── positional_encoding.py
-  ├── transformer_block.py
-  ├── cross_attention.py
-  ├── encoder_block.py
-  ├── encoder_decoder.py
-  ├── train_transformer.py  ← 额外：完整训练流程
-  ├── compare_pos_encoding.py  ← 位置编码对比实验
-  └── test_all.py
+pytorch/ 目录 ← 与 np_impl/ 结构完全对应，每个文件有 PyTorch 版
+  ├── pytorch/utils.py
+  ├── pytorch/attention.py
+  ├── pytorch/multi_head_attention.py
+  ├── pytorch/kv_cache.py
+  ├── pytorch/positional_encoding.py
+  ├── pytorch/transformer_block.py
+  ├── pytorch/cross_attention.py
+  ├── pytorch/encoder_block.py
+  ├── pytorch/encoder_decoder.py
+  ├── pytorch/train_transformer.py  ← 额外：完整训练流程
+  ├── pytorch/compare_pos_encoding.py  ← 位置编码对比实验
+  └── pytorch/test_all.py
 ```
 
 每个文件独立可运行，按顺序阅读效果最佳。
@@ -398,7 +398,7 @@ pytorch/ 目录 ← 与根目录结构完全对应，每个文件有 PyTorch 版
 - [x] PyTorch 版实现（pytorch/ 目录，与 NumPy 版一一对应）
 - [x] PyTorch 训练流程（LM Head + Teacher Forcing 训练）
 - [x] 交叉注意力（Cross-Attention）— Encoder-Decoder 架构
-- [x] RoPE（旋转位置编码）实现 — `rotary.py` + `transformer_block` 可切换
+- [x] RoPE（旋转位置编码）实现 — `np_impl/rotary.py` + `transformer_block` 可切换
 - [x] 位置编码对比实验 — `pytorch/compare_pos_encoding.py`
 - [ ] PyTorch 实战：加载真实数据集训练语言模型
 - [ ] KV Cache 的进一步优化：PagedAttention、MQA、GQA

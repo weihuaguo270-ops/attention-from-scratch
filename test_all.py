@@ -233,6 +233,104 @@ check("Decoder完整输出形状", dec_out.shape == (2, 8))
 check("完整流程稳定", np.all(np.isfinite(dec_out)))
 
 
+
+# ============================================================
+# 10. gqa — Grouped Query Attention
+# ============================================================
+print("\n【gqa 分组查询注意力】")
+from np_impl.gqa import GroupedQueryAttention
+
+np.random.seed(42)
+gqa = GroupedQueryAttention(d_model=8, num_heads=4, num_kv_heads=2)
+X_gqa = np.random.randn(4, 8)
+out_gqa = gqa.forward(X_gqa, use_mask=False)
+check("GQA 输出形状", out_gqa.shape == (4, 8))
+check("GQA 输出非零", np.linalg.norm(out_gqa) > 0)
+check("GQA 输出稳定", np.all(np.isfinite(out_gqa)))
+
+# GQA + 掩码
+out_gqa_masked = gqa.forward(X_gqa, use_mask=True)
+check("GQA+掩码输出形状", out_gqa_masked.shape == (4, 8))
+
+# GQA + RoPE
+gqa_rope = GroupedQueryAttention(d_model=8, num_heads=4, num_kv_heads=2, use_rope=True)
+out_gqa_rope = gqa_rope.forward(X_gqa, use_mask=False)
+check("GQA+RoPE 输出形状", out_gqa_rope.shape == (4, 8))
+check("GQA+RoPE 输出稳定", np.all(np.isfinite(out_gqa_rope)))
+
+# GQA K/V 重复正确性验证
+Q = X_gqa @ gqa.Wq
+K = X_gqa @ gqa.Wk
+dk = gqa.d_k
+Q_h = Q.reshape(4, gqa.num_heads, dk).transpose(1, 0, 2)
+K_h = K.reshape(4, gqa.num_kv_heads, dk).transpose(1, 0, 2)
+num_repeats = gqa.num_heads // gqa.num_kv_heads
+K_rep = np.repeat(K_h, num_repeats, axis=0)
+check("GQA K/V 重复正确", np.allclose(K_rep[0], K_h[0]) and np.allclose(K_rep[2], K_h[1]))
+
+
+# ============================================================
+# 11. llama_block — RMSNorm + SwiGLU + Llama Block
+# ============================================================
+print("\n【llama_block Llama 架构】")
+from np_impl.llama_block import RMSNorm, SwiGLU, LlamaDecoderBlock, LlamaModel
+
+# RMSNorm
+rms = RMSNorm(8)
+x_rms = np.random.randn(4, 8)
+out_rms = rms.forward(x_rms)
+check("RMSNorm 输出形状", out_rms.shape == (4, 8))
+check("RMSNorm 输出稳定", np.all(np.isfinite(out_rms)))
+
+# SwiGLU
+swiglu = SwiGLU(d_model=8, d_ff=16)
+x_swi = np.random.randn(4, 8)
+out_swi = swiglu.forward(x_swi)
+check("SwiGLU 输出形状", out_swi.shape == (4, 8))
+check("SwiGLU 输出稳定", np.all(np.isfinite(out_swi)))
+
+# LlamaDecoderBlock
+block = LlamaDecoderBlock(d_model=8, num_heads=4, num_kv_heads=2, d_ff=16, use_rope=True)
+x_block = np.random.randn(4, 8)
+out_block = block.forward(x_block, use_mask=True)
+check("LlamaBlock 输出形状", out_block.shape == (4, 8))
+check("LlamaBlock 输出稳定", np.all(np.isfinite(out_block)))
+check("LlamaBlock 输出非零", np.linalg.norm(out_block) > 0)
+
+# 多层堆叠
+model = LlamaModel(num_layers=3, d_model=8, num_heads=4, num_kv_heads=2, d_ff=16)
+out_multi = model.forward(x_block, use_mask=True)
+check("Llama 3层堆叠形状", out_multi.shape == (4, 8))
+check("Llama 3层堆叠稳定", np.all(np.isfinite(out_multi)))
+
+
+# ============================================================
+# 12. mla — Multi-head Latent Attention
+# ============================================================
+print("\n【mla 多头潜注意力】")
+from np_impl.mla import MultiHeadLatentAttention
+
+mla = MultiHeadLatentAttention(d_model=16, num_heads=4, d_k=4, d_c=6, d_kv_rope=4)
+x_mla = np.random.randn(3, 16)
+out_mla = mla.forward(x_mla, use_mask=True)
+check("MLA 输出形状", out_mla.shape == (3, 16))
+check("MLA 输出稳定", np.all(np.isfinite(out_mla)))
+
+# MLA KV Cache 自回归模拟
+mla_small = MultiHeadLatentAttention(d_model=8, num_heads=2, d_k=4, d_c=3, d_kv_rope=2)
+c_kv_cache, k_r_cache = None, None
+outputs = []
+for step in range(3):
+    x_in = np.random.randn(1, 8)
+    out, c_kv_cache, k_r_cache = mla_small.forward_with_cache(
+        x_in, c_kv_cache, k_r_cache, positions=np.array([step])
+    )
+    outputs.append(out)
+check("MLA KV Cache 3步生成", len(outputs) == 3)
+check("MLA KV Cache 输出稳定", all(np.all(np.isfinite(o)) for o in outputs))
+check("MLA KV Cache 形状正确", all(o.shape == (1, 8) for o in outputs))
+
+
 # ============================================================
 # 汇总
 # ============================================================

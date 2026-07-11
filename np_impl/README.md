@@ -6,18 +6,18 @@
 
 ## 文件说明
 
-| 文件 | 内容 | 面试对应题 |
-|------|------|-----------|
-| `attention.py` | 单头 Self-Attention + 因果掩码 | "Attention 的计算公式？" |
-| `multi_head_attention.py` | 多头自注意力（支持 RoPE 切换） | "为什么用多头？头怎么拆分合并？" |
-| `kv_cache.py` | KV Cache 推理加速（有/无缓存对比） | "为什么 LLM 首字生成慢？" |
-| `positional_encoding.py` | Sinusoidal 位置编码 | "位置编码为什么用 sin/cos？" |
-| `rotary.py` | RoPE 旋转位置编码 | "RoPE 和 Sinusoidal 的区别？" |
-| `transformer_block.py` | 完整 Decoder Block（Post-Norm + ReLU） | "原始 Transformer Block 的结构？" |
-| `cross_attention.py` | 编码器-解码器交叉注意力 | "Cross-Attention 的 Q/K/V 来自哪？" |
-| `encoder_block.py` | Encoder Block（双向 Attention） | "Encoder 和 Decoder 的 Attention 有何不同？" |
-| `encoder_decoder.py` | Encoder-Decoder 完整串联 | "翻译任务中的 Encoder-Decoder 如何衔接？" |
-| `utils.py` | softmax / split_heads / combine_heads / layer_norm | — |
+| 文件 | 内容 |
+|------|------|
+| `attention.py` | 单头 Self-Attention + 因果掩码 |
+| `multi_head_attention.py` | 多头自注意力（支持 RoPE 切换） |
+| `kv_cache.py` | KV Cache 推理加速（有/无缓存对比） |
+| `positional_encoding.py` | Sinusoidal 位置编码 |
+| `rotary.py` | RoPE 旋转位置编码 |
+| `transformer_block.py` | 完整 Decoder Block（Post-Norm + ReLU） |
+| `cross_attention.py` | 编码器-解码器交叉注意力 |
+| `encoder_block.py` | Encoder Block（双向 Attention） |
+| `encoder_decoder.py` | Encoder-Decoder 完整串联 |
+| `utils.py` | softmax / split_heads / combine_heads / layer_norm |
 
 ## 学习路径
 

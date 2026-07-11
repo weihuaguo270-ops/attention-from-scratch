@@ -9,13 +9,13 @@
 
 ## 文件说明
 
-| 文件 | 内容 | 面试对应题 |
-|------|------|-----------|
-| `gqa.py` | Grouped Query Attention（分组查询注意力） | "Llama 用什么 Attention？GQA 怎么省 KV Cache？" |
-| `llama_block.py` | 完整 Llama Decoder Block（RMSNorm+SwiGLU+GQA+RoPE+Pre-Norm） | "Llama 和原始 Transformer 的架构差异？" |
-| `mla.py` | Multi-head Latent Attention（DeepSeek V2 核心） | "DeepSeek V2 的核心创新？MLA 的 KV Cache 怎么压缩的？" |
-| `utils.py` | softmax | — |
-| `rotary.py` | RoPE 旋转位置编码 | — |
+| 文件 | 内容 |
+|------|------|
+| `gqa.py` | Grouped Query Attention（分组查询注意力） |
+| `llama_block.py` | 完整 Llama Decoder Block（RMSNorm+SwiGLU+GQA+RoPE+Pre-Norm） |
+| `mla.py` | Multi-head Latent Attention（DeepSeek V2 核心） |
+| `utils.py` | softmax |
+| `rotary.py` | RoPE 旋转位置编码 |
 
 ## 模块详解
 

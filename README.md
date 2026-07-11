@@ -180,27 +180,90 @@ python -m np_impl.test         # 原始 Transformer 36+ 项
 python -m modern_llm.test      # 现代 LLM 15+ 项
 ```
 
-输出示例：
+输出示例（实际运行结果）：
 
-```
+```text
 $ python test_all.py
+
+============================================================
+Attention From Scratch — 全部测试
+============================================================
 
 ############################################################
 # Part 1: 原始 Transformer（np_impl/）
 ############################################################
+
 【utils 工具函数】
   ✅ softmax 形状
   ✅ softmax 行和为1
-  ...
+  ✅ softmax 单调性
+  ✅ split_heads 形状
+  ✅ combine_heads 还原
+  ✅ layer_norm 均值≈0
+  ✅ layer_norm 方差≈1
+
+【attention 单头 Self-Attention】
+  ✅ 无掩码输出形状
+  ✅ 权重行和为1
+  ✅ 词0只看自己
+  ✅ 词1只看前2
+  ✅ 词2看全部
+
+【multi_head_attention 多头注意力】
+  ✅ 多头输出形状
+  ✅ 多头输出非零
+
+【kv_cache KV Cache 验证】
+  ✅ KV Cache 第2步一致
+
+【positional_encoding 位置编码】
+  ✅ 位置编码形状
+  ✅ 相邻位置编码不同
+  ✅ 值域在[-1,1]
+
+【transformer_block 完整 Block】
+  ✅ Block输出形状
+  ✅ Block输出稳定
+  ✅ 3层堆叠稳定
+
+【encoder_decoder 完整架构】
+  ✅ Encoder完整输出形状
+  ✅ Decoder完整输出形状
+  ✅ 完整流程稳定
+
 🎉 原始 Transformer 全部测试通过!
 
 ############################################################
 # Part 2: 现代 LLM 架构（modern_llm/）
 ############################################################
+
 【GQA 分组查询注意力】
   ✅ GQA 输出形状
-  ...
+  ✅ GQA 输出稳定
+  ✅ GQA+掩码输出形状
+  ✅ GQA+RoPE 输出稳定
+  ✅ GQA K/V 重复正确
+
+【Llama Block】
+  ✅ RMSNorm 输出形状
+  ✅ RMSNorm 输出稳定
+  ✅ SwiGLU 输出稳定
+  ✅ LlamaBlock 输出形状
+  ✅ LlamaBlock 输出稳定
+  ✅ Llama 3层堆叠形状
+  ✅ Llama 3层堆叠稳定
+
+【MLA 多头潜注意力】
+  ✅ MLA 输出形状
+  ✅ MLA 输出稳定
+  ✅ MLA KV Cache 3步生成
+  ✅ MLA KV Cache 输出稳定
+
 🎉 Modern LLM 全部测试通过!
+
+============================================================
+🎉 全部测试通过!（共 51+ 项）
+============================================================
 ```
 
 ---

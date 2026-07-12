@@ -182,6 +182,22 @@ def print_details(experiments):
             print(f"  {k}: {v}")
 
 
+def fuzzy_find(experiments, query):
+    """模糊匹配实验，返回匹配列表"""
+    query = query.strip().lower()
+    if not query:
+        return []
+
+    matches = []
+    for exp_id, config, _ in experiments:
+        desc = config.get("description", config.get("desc", "")).lower()
+        tags = " ".join(config.get("tags", [])).lower()
+        # 匹配 ID 前缀、描述关键词、标签
+        if (exp_id.lower().startswith(query) or query in desc or query in tags):
+            matches.append(exp_id)
+    return matches
+
+
 def interactive_select(experiments):
     """交互式选择实验"""
     while True:
@@ -204,37 +220,91 @@ def interactive_select(experiments):
             for _, config, _ in experiments:
                 all_tags.update(config.get("tags", []))
             print(f"\n可用标签: {', '.join(sorted(all_tags))}")
-            tags = input("输入标签（多个用空格分隔）: ").strip().split()
-            filtered = filter_experiments(experiments, tags=tags)
-            print(f"匹配 {len(filtered)} 个实验")
+            tag_input = input("输入标签关键词（部分匹配即可）: ").strip().lower()
+
+            if not tag_input:
+                print("未输入标签，显示全部。")
+                return experiments, "all", False, False
+
+            # 模糊匹配标签
+            matched_tags = [t for t in all_tags if tag_input in t.lower()]
+            if not matched_tags:
+                print(f"没有匹配 '{tag_input}' 的标签，显示全部。")
+                return experiments, "all", False, False
+
+            filtered = filter_experiments(experiments, tags=matched_tags)
+            print(f"匹配标签 {matched_tags} → {len(filtered)} 个实验")
             if not filtered:
                 continue
             return filtered, "all", False, False
         elif choice == "3":
-            print(f"\n可用 ID: {', '.join([e[0] for e in experiments])}")
-            ids = input("输入 ID（多个用空格分隔）: ").strip().split()
-            filtered = filter_experiments(experiments, ids=ids)
-            print(f"匹配 {len(filtered)} 个实验")
-            if not filtered:
+            query = input("输入实验关键词（ID前缀/描述/标签，部分匹配即可）: ").strip()
+            if not query:
+                print("未输入关键词，显示全部。")
+                return experiments, "all", False, False
+
+            matches = fuzzy_find(experiments, query)
+            if not matches:
+                print(f"没有匹配 '{query}' 的实验。")
                 continue
+            elif len(matches) == 1:
+                eid = matches[0]
+                print(f"匹配: {eid}")
+            else:
+                print(f"\n匹配 {len(matches)} 个实验:")
+                for i, eid in enumerate(matches, 1):
+                    # 找对应描述
+                    desc = ""
+                    for exp_id, config, _ in experiments:
+                        if exp_id == eid:
+                            desc = config.get("description", "")[:40]
+                            break
+                    print(f"  {i}) {eid} — {desc}")
+                sel = input("选择编号 (回车=全部): ").strip()
+                if sel.isdigit() and 1 <= int(sel) <= len(matches):
+                    eid = matches[int(sel) - 1]
+                    matches = [eid]
+                else:
+                    print(f"显示全部 {len(matches)} 个。")
+
+            filtered = filter_experiments(experiments, ids=matches)
             return filtered, "all", False, False
         elif choice == "4":
             n = input("看最近几次？: ").strip()
             if n.isdigit():
                 filtered = filter_experiments(experiments, last=int(n))
                 return filtered, "all", False, False
+            print("无效数字")
+            continue
         elif choice == "5":
-            print(f"\n可用 ID: {', '.join([e[0] for e in experiments])}")
-            eid = input("输入 ID: ").strip()
+            query = input("输入实验关键词: ").strip()
+            if not query:
+                continue
+            matches = fuzzy_find(experiments, query)
+            if not matches:
+                print(f"没有匹配 '{query}' 的实验。")
+                continue
+            elif len(matches) == 1:
+                eid = matches[0]
+            else:
+                print(f"\n匹配 {len(matches)} 个:")
+                for i, eid in enumerate(matches, 1):
+                    desc = ""
+                    for exp_id, config, _ in experiments:
+                        if exp_id == eid:
+                            desc = config.get("description", "")[:40]
+                            break
+                    print(f"  {i}) {eid} — {desc}")
+                sel = input("选择编号: ").strip()
+                if not sel.isdigit() or not (1 <= int(sel) <= len(matches)):
+                    print("无效选择。")
+                    continue
+                eid = matches[int(sel) - 1]
+
             filtered = filter_experiments(experiments, ids=[eid])
             if filtered:
                 print_details(filtered)
-            # 详情看完直接退出，不回到菜单
             return None, None, None, None
-
-        print("无效选项")
-
-    return None, None, None, None
 
 
 if __name__ == "__main__":

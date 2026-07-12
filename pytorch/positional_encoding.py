@@ -38,6 +38,22 @@ def sinusoidal_positional_encoding(seq_len, d_model):
 
 
 # ============================================================
+# RoPE 旋转位置编码（PyTorch 版）
+# ============================================================
+def precompute_rope(d_k: int, max_seq_len: int = 128, base: float = 10000.0):
+    """
+    预计算 RoPE 的 cos/sin 表
+    返回:
+        cos_table: (max_seq_len, d_k // 2)
+        sin_table: (max_seq_len, d_k // 2)
+    """
+    theta = base ** (-2 * torch.arange(0, d_k, 2, dtype=torch.float32) / d_k)
+    pos = torch.arange(max_seq_len, dtype=torch.float32)
+    angles = pos[:, None] * theta[None, :]
+    return torch.cos(angles), torch.sin(angles)
+
+
+# ============================================================
 # 演示
 # ============================================================
 if __name__ == "__main__":

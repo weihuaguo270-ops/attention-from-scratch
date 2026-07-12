@@ -1,5 +1,5 @@
 """
-Attention From Scratch — 统一测试入口
+Transformer Attention — 统一测试入口
 
 运行两个独立测试套件：
   np_impl/     — 原始 Transformer 架构（2017）
@@ -15,7 +15,7 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 print("=" * 60)
-print("Attention From Scratch — 全部测试")
+print("Transformer Attention — 全部测试")
 print("=" * 60)
 
 # ── Part 1: 原始 Transformer ──

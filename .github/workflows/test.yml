@@ -31,4 +31,8 @@ jobs:
       run: |
         pip install numpy
     - name: Test
-      run: python test_all.py
+      run: python test_all.py    - name: Benchmark (CPU)
+      run: |
+        pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
+        python -m experiments.benchmark_attention --seq_len 128 --warmup 2 --iter 5
+

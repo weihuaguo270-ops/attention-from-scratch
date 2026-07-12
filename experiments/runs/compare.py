@@ -277,29 +277,43 @@ def interactive_select(experiments):
             print("无效数字")
             continue
         elif choice == "5":
-            query = input("输入实验关键词: ").strip()
-            if not query:
-                continue
-            matches = fuzzy_find(experiments, query)
-            if not matches:
-                print(f"没有匹配 '{query}' 的实验。")
-                continue
-            elif len(matches) == 1:
-                eid = matches[0]
-            else:
-                print(f"\n匹配 {len(matches)} 个:")
-                for i, eid in enumerate(matches, 1):
-                    desc = ""
-                    for exp_id, config, _ in experiments:
-                        if exp_id == eid:
-                            desc = config.get("description", "")[:40]
-                            break
-                    print(f"  {i}) {eid} — {desc}")
-                sel = input("选择编号: ").strip()
-                if not sel.isdigit() or not (1 <= int(sel) <= len(matches)):
-                    print("无效选择。")
+            print(f"\n可用实验:")
+            for exp_id, config, _ in experiments:
+                desc = config.get("description", "")[:40]
+                print(f"  {exp_id} — {desc}")
+            query = input("\n输入关键词筛选，或直接输入编号: ").strip()
+
+            # 先检查是不是直接输入了编号
+            if query.isdigit():
+                idx = int(query)
+                if 1 <= idx <= len(experiments):
+                    eid = experiments[idx - 1][0]
+                else:
+                    print(f"编号 {idx} 超出范围 (1-{len(experiments)})")
                     continue
-                eid = matches[int(sel) - 1]
+            elif query:
+                matches = fuzzy_find(experiments, query)
+                if not matches:
+                    print(f"没有匹配 '{query}' 的实验。")
+                    continue
+                elif len(matches) == 1:
+                    eid = matches[0]
+                else:
+                    print(f"\n匹配 {len(matches)} 个:")
+                    for i, eid2 in enumerate(matches, 1):
+                        desc = ""
+                        for exp_id, config, _ in experiments:
+                            if exp_id == eid2:
+                                desc = config.get("description", "")[:40]
+                                break
+                        print(f"  {i}) {eid2} — {desc}")
+                    sel = input("选择编号: ").strip()
+                    if not sel.isdigit() or not (1 <= int(sel) <= len(matches)):
+                        print("无效选择。")
+                        continue
+                    eid = matches[int(sel) - 1]
+            else:
+                continue
 
             filtered = filter_experiments(experiments, ids=[eid])
             if filtered:

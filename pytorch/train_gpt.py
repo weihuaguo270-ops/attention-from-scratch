@@ -253,28 +253,76 @@ if __name__ == "__main__":
     tag = args.tag or ""
     desc = args.desc or ""
 
-    # 交互式确认参数
-    if not any(v for v in vars(args).values() if v and v not in (False, None, "", 64, 4, 2, 0.003, 0.01, 60, 8, 64, 5, 2000, None)):
-        # 全默认 → 显示参数清单让用户确认
-        print(f"\n将使用以下参数训练：")
-        print(f"{'参数':>20} | {'值':>10} | {'说明':>20}")
-        print("-" * 55)
-        print(f"{'d_model':>20} | {args.d_model:>10} | {'模型维度':>20}")
-        print(f"{'num_layers':>20} | {args.num_layers:>10} | {'层数':>20}")
-        print(f"{'lr':>20} | {args.lr:>10} | {'学习率':>20}")
-        print(f"{'epochs':>20} | {args.epochs:>10} | {'训练轮次':>20}")
-        print(f"{'batch_size':>20} | {args.batch_size:>10} | {'批次大小':>20}")
-        print(f"{'max_len':>20} | {args.max_len:>10} | {'序列长度':>20}")
-        print(f"{'data_limit':>20} | {args.data_limit:>10} | {'故事数':>20}")
-        print(f"{'patience':>20} | {args.patience:>10} | {'早停耐心':>20}")
-        print(f"{'tag':>20} | {tag or '(无)':>10} | {'实验标签':>20}")
-        print(f"{'desc':>20} | {desc or '(无)':>10} | {'实验描述':>20}")
-        confirm = input("\n确认开始训练？(Y/n): ").strip().lower()
-        if confirm and confirm not in ("y", "yes", ""):
-            print("已取消。")
-            sys.exit(0)
+    # 交互式参数调整
+    if not any(v for v in vars(args).values() if v not in (False, None, "", 64, 4, 2, 0.003, 0.01, 60, 8, 64, 5, 2000, None)):
+        # 全默认 → 进入交互配置模式
+        cfg = {
+            "d_model": args.d_model, "num_layers": args.num_layers,
+            "lr": args.lr, "epochs": args.epochs,
+            "batch_size": args.batch_size, "max_len": args.max_len,
+            "data_limit": args.data_limit, "patience": args.patience,
+            "tag": tag, "desc": desc,
+        }
+        labels = {
+            "d_model": "模型维度", "num_layers": "层数", "lr": "学习率",
+            "epochs": "训练轮次", "batch_size": "批次大小", "max_len": "序列长度",
+            "data_limit": "故事数", "patience": "早停耐心",
+            "tag": "实验标签", "desc": "实验描述",
+        }
+
+        while True:
+            print(f"\n{'=' * 55}")
+            print("当前参数配置：")
+            print(f"{'=' * 55}")
+            print(f"{'编号':>4} | {'参数名':>15} | {'当前值':>12} | {'说明':>12}")
+            print("-" * 55)
+            keys = list(cfg.keys())
+            for i, k in enumerate(keys, 1):
+                v = cfg[k]
+                print(f"{i:>4} | {k:>15} | {str(v):>12} | {labels.get(k, ''):>12}")
+            print("-" * 55)
+            print("  0) 开始训练")
+            print("  q) 退出")
+            cmd = input("\n输入编号修改参数，或 0 开始: ").strip().lower()
+            if cmd == "q":
+                print("已退出。")
+                sys.exit(0)
+            elif cmd == "0":
+                break
+            elif cmd.isdigit():
+                idx = int(cmd)
+                if 1 <= idx <= len(keys):
+                    k = keys[idx - 1]
+                    current = cfg[k]
+                    new_val = input(f"  输入 {labels.get(k, k)} 新值 (当前={current}): ").strip()
+                    if not new_val:
+                        continue
+                    # 类型转换
+                    if k == "tag" or k == "desc":
+                        cfg[k] = new_val
+                    elif k == "lr":
+                        cfg[k] = float(new_val)
+                    else:
+                        cfg[k] = int(new_val)
+                    print(f"  ✅ {k} = {cfg[k]}")
+                else:
+                    print("  无效编号。")
+            else:
+                print("  无效输入。")
+
+        # 应用配置
+        d_model = cfg["d_model"]
+        num_layers = cfg["num_layers"]
+        lr = cfg["lr"]
+        num_epochs = cfg["epochs"]
+        batch_size = cfg["batch_size"]
+        max_len = cfg["max_len"]
+        data_limit = cfg["data_limit"]
+        patience = cfg["patience"]
+        tag = cfg["tag"]
+        desc = cfg["desc"]
+        print(f"\n开始训练: d_model={d_model}, lr={lr}, epochs={num_epochs}, tag={tag or '(无)'}")
     else:
-        # 有自定义参数 → 直接开始
         print(f"使用自定义参数: d_model={args.d_model}, lr={args.lr}, "
               f"epochs={args.epochs}, tag={tag or '(无)'}")
 

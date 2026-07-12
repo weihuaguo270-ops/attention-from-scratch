@@ -104,15 +104,15 @@ self_attention/
 
 标准 Transformer 教科书实现。从最基本的 Self-Attention 开始，逐步组装出完整的 Encoder-Decoder 架构。
 
-| 文件 | 覆盖内容 | 面试对应题 |
-|------|---------|-----------|
-| `attention.py` | QKV 投影、缩放点积 Attention、因果掩码 | "Attention 的计算公式是什么？" |
-| `multi_head_attention.py` | 多头拆分/合并、RoPE 可切换 | "为什么用多头注意力？" |
-| `kv_cache.py` | 有/无缓存的计算量对比 | "为什么 LLM 首字生成慢？" |
-| `positional_encoding.py` | Sinusoidal PE 公式、维度周期 | "位置编码为什么用 sin/cos？" |
-| `rotary.py` | RoPE 旋转、对角线不变性、长度外推 | "RoPE 和 Sinusoidal 有什么区别？" |
-| `transformer_block.py` | Post-Norm + ReLU FFN | "原始 Transformer Block 的结构？" |
-| `encoder_decoder.py` | Encoder-Decoder 完整串联 | "Encoder-Decoder 如何衔接？" |
+| 文件 | 覆盖内容 |
+|------|---------|
+| `attention.py` | QKV 投影、缩放点积 Attention、因果掩码 |
+| `multi_head_attention.py` | 多头拆分/合并、RoPE 可切换 |
+| `kv_cache.py` | 有/无缓存的计算量对比 |
+| `positional_encoding.py` | Sinusoidal PE 公式、维度周期 |
+| `rotary.py` | RoPE 旋转、对角线不变性、长度外推 |
+| `transformer_block.py` | Post-Norm + ReLU FFN |
+| `encoder_decoder.py` | Encoder-Decoder 完整串联 |
 
 运行：`python -m np_impl.test`
 
@@ -294,7 +294,7 @@ Attention From Scratch — 全部测试
 ──────────────────────────────────────────────
 第一次学 Attention           → np_impl/attention.py
 Transformer 完整架构         → np_impl/encoder_decoder.py
-Llama 面试题                → modern_llm/llama_block.py
+Llama 架构                  → modern_llm/llama_block.py
 Scaling KV Cache            → modern_llm/gqa.py → mla.py
 DeepSeek MLA 实现细节       → modern_llm/mla.py
 ```

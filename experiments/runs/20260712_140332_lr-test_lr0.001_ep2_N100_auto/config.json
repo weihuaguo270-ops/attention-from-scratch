@@ -1,0 +1,24 @@
+{
+  "description": "比较学习率",
+  "script": "train_gpt.py",
+  "source": "auto",
+  "date": "20260712_140332",
+  "tags": [
+    "auto",
+    "lr0.001",
+    "N100",
+    "lr-test"
+  ],
+  "d_model": 64,
+  "num_layers": 4,
+  "d_ff": 128,
+  "num_heads": 4,
+  "num_kv_heads": 2,
+  "lr": 0.001,
+  "weight_decay": 0.01,
+  "num_epochs": 2,
+  "batch_size": 8,
+  "max_len": 64,
+  "patience": 5,
+  "data_limit": 100
+}

@@ -18,7 +18,8 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 def train(d_model=64, num_layers=4, d_ff=None, num_heads=4, num_kv_heads=2,
           lr=3e-3, weight_decay=0.01, num_epochs=60, batch_size=8,
-          max_len=64, patience=5, data_limit=2000):
+          max_len=64, patience=5, data_limit=2000,
+          _tag="", _desc=""):
     if d_ff is None:
         d_ff = d_model * 2
     params = {k: v for k, v in locals().items()}
@@ -144,7 +145,7 @@ def train(d_model=64, num_layers=4, d_ff=None, num_heads=4, num_kv_heads=2,
     print(f"\n困惑度 (Perplexity): {perplexity:.2f}")
 
     # 自动保存实验记录
-    _save_experiment_log(params, {
+    _save_experiment_log({**params, "_tag": _tag, "_desc": _desc}, {
         "best_val_loss": round(best_val, 4),
         "best_epoch": best_epoch,
         "final_train_loss": round(avg_train, 4),
@@ -164,18 +165,26 @@ def _save_experiment_log(params, results):
 
     # 从参数生成描述性目录名（突出与默认值不同的参数）
     parts = [ts]
+    tag = params.pop("_tag", "")
+    desc = params.pop("_desc", "")
+
+    # 如果有 tag，优先作为目录名标识
+    if tag:
+        parts.append(tag)
+
     defaults = dict(d_model=64, num_layers=4, d_ff=None, num_heads=4,
                     num_kv_heads=2, lr=0.003, weight_decay=0.01,
                     num_epochs=60, batch_size=8, max_len=64,
                     patience=5, data_limit=2000)
     for k, v in params.items():
+        if k in ("_tag", "_desc", "params"):
+            continue
         if k == "d_ff" and v is None:
             continue
         dv = defaults.get(k)
         if k == "d_ff":
-            dv = params["d_model"] * 2
+            dv = params.get("d_model", 64) * 2
         if v != dv:
-            # 缩写参数名
             short = {"d_model": "d", "num_layers": "L", "num_heads": "H",
                      "num_kv_heads": "KV", "lr": "lr", "weight_decay": "wd",
                      "num_epochs": "ep", "batch_size": "bs", "max_len": "ml",
@@ -199,9 +208,11 @@ def _save_experiment_log(params, results):
         tags.append(f"lr{params['lr']}")
     if params.get("data_limit", 2000) != 2000:
         tags.append(f"N{params['data_limit']}")
+    if tag:
+        tags.append(tag)
 
     config = {
-        "description": f"train_gpt (d={params.get('d_model',64)}, "
+        "description": desc or f"train_gpt (d={params.get('d_model',64)}, "
                        f"lr={params.get('lr',0.003)})",
         "script": "train_gpt.py",
         "source": "auto",
@@ -235,7 +246,12 @@ if __name__ == "__main__":
     parser.add_argument("--num_heads", type=int, default=4)
     parser.add_argument("--num_kv_heads", type=int, default=2)
     parser.add_argument("--d_ff", type=int, default=None)
+    parser.add_argument("--tag", type=str, default="", help="实验标签（用于分类，如 lr-test）")
+    parser.add_argument("--desc", type=str, default="", help="实验描述")
     args = parser.parse_args()
+
+    tag = args.tag or ""
+    desc = args.desc or ""
 
     train(
         d_model=args.d_model, num_layers=args.num_layers,
@@ -244,4 +260,5 @@ if __name__ == "__main__":
         weight_decay=args.weight_decay, num_epochs=args.epochs,
         batch_size=args.batch_size, max_len=args.max_len,
         patience=args.patience, data_limit=args.data_limit,
+        _tag=tag, _desc=desc,
     )

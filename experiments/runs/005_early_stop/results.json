@@ -1,0 +1,9 @@
+{
+  "best_val_loss": 3.73,
+  "best_epoch": 4,
+  "final_train_loss": 1.58,
+  "final_val_loss": 4.7,
+  "perplexity": 41.52,
+  "epochs_actual": 9,
+  "generated": "once upon a time there lived a little girl named lily. she loved her toys and toys. one day, she had a toy home."
+}

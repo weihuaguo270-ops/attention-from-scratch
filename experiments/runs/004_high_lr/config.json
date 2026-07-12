@@ -1,0 +1,16 @@
+{
+  "desc": "lr=1e-2，学得太猛，过拟合最严重",
+  "d_model": 64,
+  "num_layers": 4,
+  "d_ff": 128,
+  "num_heads": 4,
+  "num_kv_heads": 2,
+  "lr": 0.01,
+  "weight_decay": 0.01,
+  "epochs": 20,
+  "batch_size": 8,
+  "max_len": 64,
+  "early_stop": false,
+  "patience": null,
+  "data_stories": 500
+}

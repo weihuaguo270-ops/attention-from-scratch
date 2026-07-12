@@ -77,6 +77,7 @@ def train():
     print_every = 5
     patience = 5      # 连续几次 val loss 不降就停
     best_val = float('inf')
+    best_epoch = 0
     wait = 0
 
     print(f"\\n开始训练 {num_epochs} epoch...")
@@ -117,6 +118,7 @@ def train():
         stopping_msg = ""
         if avg_val < best_val:
             best_val = avg_val
+            best_epoch = epoch
             wait = 0
             torch.save(model.state_dict(), "checkpoints/gpt_best.pt")
             stopping_msg = "↓ 保存"
@@ -146,6 +148,7 @@ def train():
 
     prompts = ["once upon a time", "there was a", "the little"]
     model.eval()
+    generated = ""  # 用于实验记录
 
     for prompt in prompts:
         from .data import encode_prompt
@@ -155,9 +158,11 @@ def train():
                 input_ids, max_new_tokens=20, temperature=0.8
             )
 
-        generated = decode(output_ids[0].tolist(), idx2word)
-        print(f"\n  输入: {prompt}")
-        print(f"  输出: {generated}")
+        result = decode(output_ids[0].tolist(), idx2word)
+        print(f"\\n  输入: {prompt}")
+        print(f"  输出: {result}")
+        if not generated:
+            generated = result
 
     # 计算困惑度
     model.eval()
@@ -174,8 +179,66 @@ def train():
             total_tokens += non_pad
 
     perplexity = torch.exp(torch.tensor(total_loss / total_tokens)).item()
-    print(f"\n验证集困惑度 (Perplexity): {perplexity:.2f}")
+    print(f"\\n验证集困惑度 (Perplexity): {perplexity:.2f}")
     print(f"预期: <50 说明模型已学到基本语言模式")
+
+    # 自动记录实验
+    _save_experiment_log(
+        config={
+            "d_model": model.token_embedding.embedding_dim,
+            "num_layers": len(model.layers),
+            "d_ff": model.layers[0].swiglu.W_gate.out_features,
+            "num_heads": model.layers[0].self_attn.num_heads,
+            "num_kv_heads": model.layers[0].self_attn.num_kv_heads,
+            "lr": optimizer.param_groups[0]["lr"],
+            "weight_decay": optimizer.param_groups[0]["weight_decay"],
+            "epochs": num_epochs,
+            "batch_size": train_loader.batch_size,
+            "max_len": max_len,
+            "early_stop": patience > 0,
+            "patience": patience if patience > 0 else None,
+            "data_stories": len(stories),
+        },
+        results={
+            "best_val_loss": round(best_val, 4),
+            "best_epoch": best_epoch,
+            "final_train_loss": round(avg_train, 4),
+            "final_val_loss": round(avg_val, 4),
+            "perplexity": round(perplexity, 2),
+            "epochs_actual": epoch,
+            "generated": generated,
+        }
+    )
+
+
+def _save_experiment_log(config, results):
+    """自动保存实验配置和结果到 experiments/runs/"""
+    import json
+    from datetime import datetime
+
+    runs_dir = os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "experiments", "runs")
+    os.makedirs(runs_dir, exist_ok=True)
+
+    # 自动编号
+    existing = [d for d in os.listdir(runs_dir) if os.path.isdir(os.path.join(runs_dir, d))]
+    next_id = f"{len(existing) + 1:03d}"
+    exp_dir = os.path.join(runs_dir, f"{next_id}_auto")
+    os.makedirs(exp_dir, exist_ok=True)
+
+    log = {
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "config": config,
+        "results": results,
+    }
+
+    with open(os.path.join(exp_dir, "config.json"), "w", encoding="utf-8") as f:
+        json.dump({**config, "timestamp": log["timestamp"]}, f, indent=2, ensure_ascii=False)
+
+    with open(os.path.join(exp_dir, "results.json"), "w", encoding="utf-8") as f:
+        json.dump(results, f, indent=2, ensure_ascii=False)
+
+    print(f"\\n📝 实验已自动记录到 experiments/runs/{next_id}_auto/")
 
 
 if __name__ == "__main__":

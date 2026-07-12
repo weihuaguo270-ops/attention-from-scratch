@@ -4,3 +4,4 @@ __pycache__/
 .env
 tinystories.txt
 checkpoints/
+__pycache__/

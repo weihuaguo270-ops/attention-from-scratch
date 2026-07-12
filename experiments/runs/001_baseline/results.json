@@ -1,0 +1,9 @@
+{
+  "best_val_loss": 4.19,
+  "best_epoch": 1,
+  "final_train_loss": 0.17,
+  "final_val_loss": 9.5,
+  "perplexity": 13335.55,
+  "epochs_actual": 60,
+  "generated": "once upon a time time there was a girl named mia. mia loved her pet big picture to help her help her mom cake"
+}

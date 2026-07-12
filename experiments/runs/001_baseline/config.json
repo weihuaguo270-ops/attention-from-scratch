@@ -1,0 +1,16 @@
+{
+  "desc": "基准配置，无早停，60 epoch",
+  "d_model": 64,
+  "num_layers": 4,
+  "d_ff": 128,
+  "num_heads": 4,
+  "num_kv_heads": 2,
+  "lr": 0.003,
+  "weight_decay": 0.01,
+  "epochs": 60,
+  "batch_size": 8,
+  "max_len": 64,
+  "early_stop": false,
+  "patience": null,
+  "data_stories": 2000
+}

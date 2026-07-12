@@ -26,9 +26,9 @@ def load_all():
         results_path = os.path.join(RUNS_DIR, d, "results.json")
         if not os.path.exists(config_path) or not os.path.exists(results_path):
             continue
-        with open(config_path) as f:
+        with open(config_path, "r", encoding="utf-8") as f:
             config = json.load(f)
-        with open(results_path) as f:
+        with open(results_path, "r", encoding="utf-8") as f:
             results = json.load(f)
         experiments.append((d, config, results))
     return experiments

@@ -1,4 +1,4 @@
-# Attention From Scratch
+# Transformer Attention
 
 **NumPy/PyTorch 实现的 Transformer Attention 机制全集** — 涵盖从 2017 年原始 Transformer 到现代 LLM 架构（GQA、Llama Block、DeepSeek MLA、Speculative Decoding、Attention Sinks）的完整演进。
 
@@ -24,7 +24,7 @@
 ## 项目结构
 
 ```
-attention-from-scratch/
+transformer-attention/
 │
 ├── np_impl/                    # 原始 Transformer（NumPy）
 │   ├── attention.py            单头 Self-Attention + 因果掩码

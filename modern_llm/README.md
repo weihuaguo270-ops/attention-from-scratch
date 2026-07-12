@@ -15,6 +15,7 @@
 | `llama_block.py` | 完整 Llama Decoder Block（RMSNorm+SwiGLU+GQA+RoPE+Pre-Norm） |
 | `mla.py` | Multi-head Latent Attention（DeepSeek V2 核心） |
 | `speculative_decoding.py` | Speculative Decoding（投机解码：小模型草拟→大模型验证→Rejection Sampling） |
+| `attention_sinks.py` | StreamingLLM（Attention Sinks：长文本推理 KV Cache 淘汰策略） |
 | `utils.py` | softmax |
 | `rotary.py` | RoPE 旋转位置编码 |
 

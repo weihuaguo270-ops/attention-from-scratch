@@ -145,6 +145,35 @@ check("Rejection: 猜错时极低接受概率", accept2 == False)
 
 
 # ============================================================
+# 5. Attention Sinks
+# ============================================================
+print("\n【Attention Sinks StreamingLLM】")
+from modern_llm.attention_sinks import StreamingKVCache
+
+# 基础缓存更新验证
+cache = StreamingKVCache(sink_len=2, window_len=4)
+for i in range(8):
+    k = np.random.randn(1, 8)
+    v = np.random.randn(1, 8)
+    cache.update(k, v)
+check("Streaming 缓存大小有上限", cache.size <= cache.max_size)
+check("Streaming 缓存上限=2+4", cache.max_size == 6)
+
+# 验证缓存包含 sinks（用实际序列位置）
+cache2 = StreamingKVCache(sink_len=3, window_len=5)
+for i in range(20):
+    cache2.update(np.random.randn(1, 4), np.random.randn(1, 4), positions=np.array([i]))
+_, _, poses = cache2.get_all()
+check("Streaming 保留开头 sinks", 0 in poses and 1 in poses and 2 in poses)
+check("Streaming 保留最近 token", 19 in poses and 18 in poses)
+check("Streaming 丢弃中间 token", 5 not in poses)
+
+# 重置
+cache2.reset()
+check("Streaming 重置后为空", cache2.size == 0)
+
+
+# ============================================================
 # 汇总
 # ============================================================
 print(f"\n{'='*50}")

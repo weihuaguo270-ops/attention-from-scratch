@@ -1,6 +1,8 @@
 [flake8]
-max-line-length = 120
-ignore = ALL
-extend-ignore = 
+max-line-length = 200
+# Only check for real bugs: F (pyflakes) minus style warnings
+select = F
+ignore = F401,F841,F541
 per-file-ignores =
     */test*: ALL
+    */__init__.py: ALL

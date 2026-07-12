@@ -5,5 +5,6 @@
   "final_val_loss": 5.28,
   "perplexity": null,
   "epochs_actual": 20,
-  "generated": "once upon a time very very whipped in a small at the little girl and said, around the little"
+  "generated": "once upon a time very very whipped in a small at the little girl and said, around the little",
+  "notes": "best_epoch=null: 由compare_training.py生成，未追踪逐轮最佳epoch；perplexity=null: 该对比实验未计算困惑度"
 }

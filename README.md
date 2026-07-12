@@ -303,10 +303,35 @@ DeepSeek MLA 实现细节       → modern_llm/mla.py
 
 ## 后续计划
 
-- [x] **P0 - 深度方向**：GQA / Llama Block / MLA（`modern_llm/`）
-- [ ] **P1 - 广度方向**：BPE Tokenizer / 真实数据训练 / 推理 Demo
-- [ ] **P2 - 加分项目**：Attention Sinks / Sliding Window / Speculative Decoding
-- [ ] **P3 - 亮点项目**：Flash Attention / Mamba / 简单量化
+已完成：
+- [x] 第一代：原始 Transformer 全实现（`np_impl/`）
+- [x] 第二代：GQA + Llama Block + RoPE 等现代架构实现（`modern_llm/`）
+- [x] 第三代：DeepSeek MLA 实现（`modern_llm/mla.py`）
+- [x] Speculative Decoding 推理加速（`modern_llm/speculative_decoding.py`）
+- [x] Attention Sinks / StreamingLLM 长文本缓存优化（`modern_llm/attention_sinks.py`）
+- [x] PyTorch 版 GQA + Llama Block + 完整 GPT 训练 pipeline（`pytorch/`）
+- [x] 对比实验系统（`experiments/`）：Attention 变体 / KV 策略 / 解码策略 / 超参数
+- [x] 实验记录与自动存档（`experiments/runs/compare.py`）
+
+按目标岗位优先级排列：
+
+### LLM 算法方向
+
+- [ ] **MoE（Mixture of Experts）** — 稀疏 MoE 的前向实现（DeepSeek MoE、Mixtral 架构），这是当前千亿模型的主流架构
+- [ ] **Flash Attention 原理与数值对比** — GPU 显存带宽优化，tiling 算法的概念实现和数值模拟
+- [ ] **简单量化（FP16 / INT8）** — 模型压缩基础，对比量化前后的精度和速度
+- [ ] **长上下文扩展（RoPE 改进 / ALiBi / 位置插值）** — 从 2K 到 128K 上下文的技术路线
+
+### LLM 评测方向
+
+- [ ] **训练对比实验扩展** — 在已有实验系统上增加更多维度：不同 attention 变体（MHA vs GQA vs MLA）对训练收敛的影响
+- [ ] **生成质量自动评估** — Perplexity + 多样性 + 重复率等多维评估指标
+- [ ] **推理性能 Benchmark** — 不同 attention 变体在不同序列长度下的延迟和吞吐量
+
+### 通用工程能力
+
+- [ ] **BPE Tokenizer 从零实现** — 补充完整 pipeline 的最后一块拼图
+- [ ] **交互式生成 Demo** — 训练完成后浏览器端交互展示
 
 ---
 

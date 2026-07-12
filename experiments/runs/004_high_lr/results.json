@@ -1,5 +1,6 @@
 {
   "best_val_loss": 6.85,
+  "best_epoch": null,
   "final_train_loss": 0.68,
   "final_val_loss": 6.85,
   "perplexity": null,

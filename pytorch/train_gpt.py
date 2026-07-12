@@ -15,6 +15,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 
 def train():
+    import os
     # ============================================================
     # 1. 数据准备
     # ============================================================
@@ -70,15 +71,18 @@ def train():
     scheduler = CosineAnnealingLR(optimizer, T_max=100)
     criterion = nn.CrossEntropyLoss(ignore_index=0)  # ignore <pad>
 
-    num_epochs = 60
-    print_every = 10
+    os.makedirs("checkpoints", exist_ok=True)
 
-    # ============================================================
-    # 4. 训练循环
-    # ============================================================
-    print(f"\n开始训练 {num_epochs} epoch...")
-    print(f"{'Epoch':>6} | {'Train Loss':>10} | {'Val Loss':>8} | {'LR':>8}")
-    print("-" * 40)
+    num_epochs = 60
+    print_every = 5
+    patience = 5      # 连续几次 val loss 不降就停
+    best_val = float('inf')
+    wait = 0
+
+    print(f"\\n开始训练 {num_epochs} epoch...")
+    print(f"早停耐心值: {patience}（val loss 连续 {patience} 次不降即停止）")
+    print(f"{'Epoch':>6} | {'Train Loss':>10} | {'Val Loss':>8} | {'LR':>8} | {'早停等待':>8}")
+    print("-" * 50)
 
     for epoch in range(1, num_epochs + 1):
         model.train()
@@ -109,9 +113,29 @@ def train():
         avg_train = total_loss / len(train_loader)
         avg_val = val_loss / len(val_loader)
 
+        # 早停 + 保存最佳模型
+        stopping_msg = ""
+        if avg_val < best_val:
+            best_val = avg_val
+            wait = 0
+            torch.save(model.state_dict(), "checkpoints/gpt_best.pt")
+            stopping_msg = "↓ 保存"
+        else:
+            wait += 1
+            stopping_msg = f"{wait}/{patience}"
+            if wait >= patience:
+                print(f"{epoch:>6} | {avg_train:>10.4f} | {avg_val:>8.4f} | "
+                      f"{scheduler.get_last_lr()[0]:>8.2e} | {stopping_msg:>8}")
+                print(f"\\n早停触发！最佳 Val Loss: {best_val:.4f} (epoch {epoch - patience})")
+                break
+
         if epoch % print_every == 0 or epoch == 1:
             print(f"{epoch:>6} | {avg_train:>10.4f} | {avg_val:>8.4f} | "
-                  f"{scheduler.get_last_lr()[0]:>8.2e}")
+                  f"{scheduler.get_last_lr()[0]:>8.2e} | {stopping_msg:>8}")
+
+    # 加载最佳模型用于生成
+    print(f"\\n加载最佳模型（Val Loss: {best_val:.4f}）...")
+    model.load_state_dict(torch.load("checkpoints/gpt_best.pt"))
 
     # ============================================================
     # 5. 生成示例

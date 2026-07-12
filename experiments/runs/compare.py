@@ -37,8 +37,17 @@ def load_all():
 def filter_experiments(experiments, tags=None, ids=None, last=None):
     """按条件筛选"""
     if ids:
-        ids = [f"{int(i):03d}" for i in ids]
-        experiments = [e for e in experiments if any(i in e[0] for i in ids)]
+        experiments_filtered = []
+        for exp_id, config, results in experiments:
+            for i in ids:
+                # 支持短 ID (002) 和完整 ID (002_small_model)
+                search = i
+                if search.isdigit() and len(search) < 3:
+                    search = search.zfill(3)  # "2" → "002"
+                if exp_id.startswith(search) or exp_id == i:
+                    experiments_filtered.append((exp_id, config, results))
+                    break
+        experiments = experiments_filtered
     if tags:
         tags = [t.lower() for t in tags]
         experiments = [

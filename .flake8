@@ -1,5 +1,6 @@
 [flake8]
 max-line-length = 120
-ignore = E302,E301,E305,W292,F541,E501,E401,E402,F401,W503
+ignore = ALL
+extend-ignore = 
 per-file-ignores =
     */test*: ALL

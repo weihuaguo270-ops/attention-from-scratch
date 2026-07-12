@@ -133,10 +133,14 @@ class TinyStoriesDataset(Dataset):
         return x, y
 
 
-def create_dataloaders(stories=None, batch_size=4, max_len=64):
+def create_dataloaders(stories=None, batch_size=4, max_len=64, data_file=None):
     """创建训练和验证 DataLoader"""
     if stories is None:
-        stories = SAMPLE_STORIES + [s.strip() for s in EXTRA_TRAINING_TEXT.strip().split("\n") if s.strip()]
+        if data_file and os.path.exists(data_file):
+            stories = load_stories_from_file(data_file)
+            print(f"使用数据集: {{len(stories)}} 个故事")
+        else:
+            stories = SAMPLE_STORIES + [s.strip() for s in EXTRA_TRAINING_TEXT.strip().split("\n") if s.strip()]
     word2idx, idx2word = build_vocab(stories)
 
     # 分割训练/验证
@@ -167,16 +171,13 @@ def download_tinystories(target_path="tinystories.txt"):
 
 
 def load_stories_from_file(path):
-    """从文件加载故事列表"""
-    import json
+    """从 TinyStories 文本文件加载故事列表（<|endoftext|> 分隔）"""
     stories = []
     with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                try:
-                    data = json.loads(line)
-                    stories.append(data.get("text", ""))
-                except json.JSONDecodeError:
-                    stories.append(line)
+        text_content = f.read()
+    parts = text_content.split("<|endoftext|>")
+    for part in parts:
+        part = part.strip()
+        if len(part) > 50:
+            stories.append(part)
     return stories if stories else SAMPLE_STORIES

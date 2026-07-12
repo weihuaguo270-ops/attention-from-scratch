@@ -20,11 +20,20 @@ def train():
     # ============================================================
     from .data import create_dataloaders, decode
 
-    batch_size = 4
-    max_len = 48
+    data_file = os.path.join(os.path.dirname(os.path.dirname(
+        os.path.abspath(__file__))), "tinystories.txt")
+
+    # 只取前 2000 个故事
+    from .data import load_stories_from_file
+    all_stories = load_stories_from_file(data_file)
+    stories = all_stories[:2000]
+    print(f"使用 {len(stories)} 个故事（共 {len(all_stories)} 个）")
+
+    batch_size = 8
+    max_len = 64
 
     train_loader, val_loader, word2idx, idx2word = create_dataloaders(
-        batch_size=batch_size, max_len=max_len
+        stories=stories, batch_size=batch_size, max_len=max_len,
     )
     vocab_size = len(word2idx)
 

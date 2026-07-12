@@ -111,6 +111,40 @@ check("MLA KV Cache 形状正确", all(o.shape == (1, 8) for o in outputs))
 
 
 # ============================================================
+# 4. Speculative Decoding
+# ============================================================
+print("\n【Speculative Decoding 投机解码】")
+from modern_llm.speculative_decoding import SpeculativeDecoder, SimpleLM
+
+np.random.seed(42)
+target = SimpleLM(vocab_size=20, d_model=16, seed=42)
+draft = SimpleLM(vocab_size=20, d_model=8, seed=99)
+
+decoder = SpeculativeDecoder(draft, target, gamma=3)
+prefix = np.array([1, 5, 3])
+output = decoder.generate(prefix, max_new_tokens=10)
+check("Spec Decoding 输出有新增 token", len(output) > len(prefix))
+check("Spec Decoding 输出稳定", np.all(np.isfinite(output)))
+check("Spec Decoding 有 target 前向", decoder.stats["target_calls"] > 0)
+check("Spec Decoding 有 draft 前向", decoder.stats["draft_calls"] > 0)
+
+# 验证 rejection sampling 核心逻辑
+from modern_llm.speculative_decoding import SpeculativeDecoder as SD
+# 构造一个"draft 猜对"和"draft 猜错"的场景
+logits_agree = np.array([10.0, 0.0, 0.0])  # target 很确定选 token 0
+logits_draft = np.array([8.0, 1.0, 1.0])    # draft 也倾向 token 0
+accept, tok = SD._rejection_sample(logits_agree, logits_draft, 0)
+check("Rejection: 猜对时大概率接受", accept == True)
+
+logits_disagree = np.array([0.0, 10.0, 0.0])  # target 很确定选 token 1
+logits_draft_wrong = np.array([10.0, 0.0, 0.0])  # draft 选 token 0
+p_target = np.exp(0.0) / (np.exp(0.0) + np.exp(10.0) + np.exp(0.0))
+# token 0 在 target 中的概率极低 → p/q ≈ 0 → 几乎必拒绝
+accept2, tok2 = SD._rejection_sample(logits_disagree, logits_draft_wrong, 0)
+check("Rejection: 猜错时极低接受概率", accept2 == False)
+
+
+# ============================================================
 # 汇总
 # ============================================================
 print(f"\n{'='*50}")

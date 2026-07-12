@@ -14,6 +14,7 @@
 | `gqa.py` | Grouped Query Attention（分组查询注意力） |
 | `llama_block.py` | 完整 Llama Decoder Block（RMSNorm+SwiGLU+GQA+RoPE+Pre-Norm） |
 | `mla.py` | Multi-head Latent Attention（DeepSeek V2 核心） |
+| `speculative_decoding.py` | Speculative Decoding（投机解码：小模型草拟→大模型验证→Rejection Sampling） |
 | `utils.py` | softmax |
 | `rotary.py` | RoPE 旋转位置编码 |
 
@@ -89,7 +90,8 @@ utils.py        ← softmax
 rotary.py       ← RoPE（独立）
   ├── gqa.py    ← GQA（引用 utils + rotary）
   │   └── llama_block.py  ← Llama Block（引用 gqa）
-  └── mla.py    ← MLA（引用 utils + rotary）
+  ├── mla.py    ← MLA（引用 utils + rotary）
+  └── speculative_decoding.py  ← Spec Decoding（独立，引用 utils）
 
 ---
 

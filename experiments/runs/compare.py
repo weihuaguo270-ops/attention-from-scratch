@@ -173,27 +173,85 @@ def print_details(experiments):
             print(f"  {k}: {v}")
 
 
+def interactive_select(experiments):
+    """交互式选择实验"""
+    while True:
+        print(f"\n共 {len(experiments)} 个实验可用。选择查看方式：")
+        print("  1) 全部显示")
+        print("  2) 按标签筛选")
+        print("  3) 按 ID 选择")
+        print("  4) 只看最近 N 次")
+        print("  5) 查看某个实验的完整配置和结果")
+        print("  0) 退出")
+
+        choice = input("\n输入选项 (0-5): ").strip()
+        if choice == "0":
+            return None, None, None, None
+        elif choice == "1":
+            return experiments, "all", False, False
+        elif choice == "2":
+            # 列出所有可用标签
+            all_tags = set()
+            for _, config, _ in experiments:
+                all_tags.update(config.get("tags", []))
+            print(f"\n可用标签: {', '.join(sorted(all_tags))}")
+            tags = input("输入标签（多个用空格分隔）: ").strip().split()
+            filtered = filter_experiments(experiments, tags=tags)
+            print(f"匹配 {len(filtered)} 个实验")
+            if not filtered:
+                continue
+            return filtered, "all", False, False
+        elif choice == "3":
+            print(f"\n可用 ID: {', '.join([e[0] for e in experiments])}")
+            ids = input("输入 ID（多个用空格分隔）: ").strip().split()
+            filtered = filter_experiments(experiments, ids=ids)
+            print(f"匹配 {len(filtered)} 个实验")
+            if not filtered:
+                continue
+            return filtered, "all", False, False
+        elif choice == "4":
+            n = input("看最近几次？: ").strip()
+            if n.isdigit():
+                filtered = filter_experiments(experiments, last=int(n))
+                return filtered, "all", False, False
+        elif choice == "5":
+            print(f"\n可用 ID: {', '.join([e[0] for e in experiments])}")
+            eid = input("输入 ID: ").strip()
+            filtered = filter_experiments(experiments, ids=[eid])
+            if filtered:
+                print_details(filtered)
+            continue
+
+        print("无效选项")
+
+    return None, None, None, None
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="实验对比工具")
-    parser.add_argument("--tags", nargs="+", help="按标签筛选 (e.g. --tags lr-test baseline)")
-    parser.add_argument("--ids", nargs="+", help="按 ID 筛选 (e.g. --ids 001 005)")
+    parser.add_argument("--tags", nargs="+", help="按标签筛选")
+    parser.add_argument("--ids", nargs="+", help="按 ID 筛选")
     parser.add_argument("--last", type=int, help="只看最近 N 次")
-    parser.add_argument("--table", choices=["brief", "full"], default="full",
-                        help="显示模式 (brief/full)")
-    parser.add_argument("--detail", action="store_true", help="显示实验完整配置和结果")
-    parser.add_argument("--no-delta", action="store_true", help="不显示变化量")
-    parser.add_argument("--no-gen", action="store_true", help="不显示生成文本")
-    parser.add_argument("--baseline", default="001", help="指定 baseline ID")
+    parser.add_argument("--interactive", action="store_true", default=True,
+                        help="交互模式（默认）")
+    parser.add_argument("--batch", action="store_true", help="批量模式（非交互）")
     args = parser.parse_args()
 
     experiments = load_all()
-    experiments = filter_experiments(experiments, args.tags, args.ids, args.last)
 
-    if args.detail:
-        print_details(experiments)
+    if args.batch:
+        # 批量模式：用命令行参数筛选
+        experiments = filter_experiments(experiments, args.tags, args.ids, args.last)
+        print_table(experiments, "full")
+        print_deltas(experiments)
+        print_generated(experiments)
     else:
-        print_table(experiments, args.table)
-        if not args.no_delta:
-            print_deltas(experiments, args.baseline)
-        if not args.no_gen:
-            print_generated(experiments)
+        # 交互模式
+        result = interactive_select(experiments)
+        if result[0] is None:
+            print("退出。")
+            sys.exit(0)
+        selected, _, _, _ = result
+        print_table(selected, "full")
+        print_deltas(selected)
+        print_generated(selected)

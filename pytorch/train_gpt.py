@@ -253,6 +253,31 @@ if __name__ == "__main__":
     tag = args.tag or ""
     desc = args.desc or ""
 
+    # 交互式确认参数
+    if not any(v for v in vars(args).values() if v and v not in (False, None, "", 64, 4, 2, 0.003, 0.01, 60, 8, 64, 5, 2000, None)):
+        # 全默认 → 显示参数清单让用户确认
+        print(f"\n将使用以下参数训练：")
+        print(f"{'参数':>20} | {'值':>10} | {'说明':>20}")
+        print("-" * 55)
+        print(f"{'d_model':>20} | {args.d_model:>10} | {'模型维度':>20}")
+        print(f"{'num_layers':>20} | {args.num_layers:>10} | {'层数':>20}")
+        print(f"{'lr':>20} | {args.lr:>10} | {'学习率':>20}")
+        print(f"{'epochs':>20} | {args.epochs:>10} | {'训练轮次':>20}")
+        print(f"{'batch_size':>20} | {args.batch_size:>10} | {'批次大小':>20}")
+        print(f"{'max_len':>20} | {args.max_len:>10} | {'序列长度':>20}")
+        print(f"{'data_limit':>20} | {args.data_limit:>10} | {'故事数':>20}")
+        print(f"{'patience':>20} | {args.patience:>10} | {'早停耐心':>20}")
+        print(f"{'tag':>20} | {tag or '(无)':>10} | {'实验标签':>20}")
+        print(f"{'desc':>20} | {desc or '(无)':>10} | {'实验描述':>20}")
+        confirm = input("\n确认开始训练？(Y/n): ").strip().lower()
+        if confirm and confirm not in ("y", "yes", ""):
+            print("已取消。")
+            sys.exit(0)
+    else:
+        # 有自定义参数 → 直接开始
+        print(f"使用自定义参数: d_model={args.d_model}, lr={args.lr}, "
+              f"epochs={args.epochs}, tag={tag or '(无)'}")
+
     train(
         d_model=args.d_model, num_layers=args.num_layers,
         d_ff=args.d_ff, num_heads=args.num_heads,

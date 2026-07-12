@@ -1,18 +1,23 @@
 """
-实验对比查看器 — 一键看所有实验的关键指标和变化
+实验对比工具 — 查看、筛选、对比实验记录
 
 用法:
-  python -m experiments.runs.compare
+  python -m experiments.runs.compare                       # 全部
+  python -m experiments.runs.compare --tags baseline        # 按标签筛选
+  python -m experiments.runs.compare --tags lr-test         # 只看学习率实验
+  python -m experiments.runs.compare --ids 001 005          # 只看指定实验
+  python -m experiments.runs.compare --last 3               # 最近 3 次
+  python -m experiments.runs.compare --table brief           # 简表
+  python -m experiments.runs.compare --table full           # 详表（默认）
 """
-import json, os, sys
-
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", ".."))
+import json, os, sys, argparse
+from datetime import datetime
 
 RUNS_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def load_all():
-    """加载所有实验"""
+    """加载所有实验，按编号排序"""
     experiments = []
     for d in sorted(os.listdir(RUNS_DIR)):
         if not d[0].isdigit():
@@ -29,92 +34,166 @@ def load_all():
     return experiments
 
 
-def print_table(experiments):
-    """打印关键指标对比表"""
-    print("=" * 90)
-    print(f"{'ID':>8} {'名称':>16} {'模型':>20} {'Val':>8} {'PPL':>8} "
-          f"{'轮次':>6} {'最佳轮':>6} {'Train-Val差距':>12}")
-    print("-" * 90)
-
-    for exp_id, config, results in experiments:
-        name = config.get("desc", exp_id)[:16]
-        d_model = config.get("d_model", "?")
-        lr = config.get("lr", "?")
-        model_str = f"d={d_model} lr={lr}"
-
-        best_val = results.get("best_val_loss", "?")
-        ppl = results.get("perplexity", "?")
-        epochs_actual = results.get("epochs_actual", "?")
-        best_epoch = results.get("best_epoch", "?")
-        train_loss = results.get("final_train_loss", "?")
-        val_loss = results.get("final_val_loss", "?")
-        gap = round(val_loss - train_loss, 2) if isinstance(train_loss, (int, float)) and isinstance(val_loss, (int, float)) else "?"
-
-        ppl_str = f"{ppl:.0f}" if isinstance(ppl, (int, float)) else f"{ppl}"
-        best_ep = f"{best_epoch}" if best_epoch else "-"
-
-        print(f"{exp_id:>8} {name:>16} {model_str:>20} "
-              f"{best_val:>8} {ppl_str:>8} {epochs_actual:>6} {best_ep:>6} {gap:>12}")
+def filter_experiments(experiments, tags=None, ids=None, last=None):
+    """按条件筛选"""
+    if ids:
+        ids = [f"{int(i):03d}" for i in ids]
+        experiments = [e for e in experiments if any(i in e[0] for i in ids)]
+    if tags:
+        tags = [t.lower() for t in tags]
+        experiments = [
+            e for e in experiments
+            if any(t in [x.lower() for x in e[1].get("tags", [])] for t in tags)
+        ]
+    if last:
+        experiments = experiments[-last:]
+    return experiments
 
 
-def print_deltas(experiments):
-    """打印相对于 baseline (001) 的变化"""
-    baseline_id = None
-    baseline_results = None
-    for exp_id, config, results in experiments:
-        if "001" in exp_id:
-            baseline_id = exp_id
-            baseline_results = results
-            break
+def fmt(v, default="-"):
+    """格式化数值"""
+    if v is None:
+        return default
+    if isinstance(v, (int, float)):
+        if abs(v) < 10:
+            return f"{v:.2f}"
+        elif abs(v) < 10000:
+            return f"{v:.0f}"
+        else:
+            return f"{v:.1e}"
+    return str(v)
 
-    if not baseline_results:
-        print("\n⚠️  未找到 baseline (001)，无法计算变化")
+
+def print_table(experiments, mode="full"):
+    """打印对比表"""
+    if not experiments:
+        print("没有找到匹配的实验。")
         return
 
-    print(f"\n{'=' * 90}")
-    print(f"相对于 {baseline_id} 的变化（正数=变差，负数=变好）")
-    print(f"{'=' * 90}")
-    print(f"{'ID':>8} {'名称':>16} {'Val变化':>10} {'PPL变化':>10} {'轮次变化':>10}")
-    print("-" * 60)
+    if mode == "brief":
+        print(f"  {'ID':>10}  {'描述':>28}  {'Val Loss':>8}  {'PPL':>6}  {'轮次':>5}")
+        print("  " + "-" * 65)
+        for exp_id, config, results in experiments:
+            desc = config.get("description", config.get("desc", ""))[:28]
+            print(f"  {exp_id:>10}  {desc:>28}  "
+                  f"{fmt(results.get('best_val_loss')):>8}  "
+                  f"{fmt(results.get('perplexity')):>6}  "
+                  f"{fmt(results.get('epochs_actual')):>5}")
+        return
 
-    b_val = baseline_results.get("best_val_loss", 0)
-    b_ppl = baseline_results.get("perplexity", 0)
-    b_ep = baseline_results.get("epochs_actual", 0)
+    # full mode
+    # 表头
+    print(f"\n{'=' * 100}")
+    print(f"{'ID':>10}  {'描述':>28}  {'模型配置':>30}  {'Val Loss':>8}  "
+          f"{'PPL':>8}  {'轮次':>5}  {'最佳轮':>5}  {'差距':>6}")
+    print(f"{'=' * 100}")
 
     for exp_id, config, results in experiments:
-        if "001" in exp_id:
-            continue
+        desc = config.get("description", config.get("desc", ""))[:28]
+        d_model = config.get("d_model", "?")
+        lr = config.get("lr", "?")
+        stories = config.get("data_stories", "?")
+        tags = ",".join(config.get("tags", []))[:14]
+        model_str = f"d={d_model} lr={lr} |{stories}s {tags}"
 
-        name = config.get("desc", exp_id)[:16]
-        val = results.get("best_val_loss", "?")
-        ppl = results.get("perplexity", "?")
-        ep = results.get("epochs_actual", "?")
+        best_val = results.get("best_val_loss")
+        ppl = results.get("perplexity")
+        epochs_actual = results.get("epochs_actual")
+        best_epoch = results.get("best_epoch") if results.get("best_epoch") else "-"
+        train_loss = results.get("final_train_loss")
+        val_loss = results.get("final_val_loss")
+        gap = round(val_loss - train_loss, 2) if isinstance(train_loss, (int, float)) and isinstance(val_loss, (int, float)) else "-"
 
-        val_delta = f"{val - b_val:+.2f}" if isinstance(val, (int, float)) else "?"
-        ppl_delta = f"{ppl / b_ppl:.1%}" if isinstance(ppl, (int, float)) and b_ppl else "?"
-        ep_delta = f"{ep - b_ep:+d}" if isinstance(ep, int) else "?"
-
-        print(f"{exp_id:>8} {name:>16} {val_delta:>10} {ppl_delta:>10} {ep_delta:>10}")
+        print(f"{exp_id:>10}  {desc:>28}  {model_str:>30}  "
+              f"{fmt(best_val):>8}  {fmt(ppl):>8}  "
+              f"{fmt(epochs_actual):>5}  {str(best_epoch):>5}  {fmt(gap):>6}")
 
 
-def print_generated(experiments):
-    """打印所有实验的生成文本"""
-    print(f"\n{'=' * 90}")
+def print_deltas(experiments, baseline_id="001"):
+    """打印相对 baseline 的变化"""
+    baseline = None
+    others = []
+    for exp_id, config, results in experiments:
+        if baseline_id in exp_id:
+            baseline = results
+        else:
+            others.append((exp_id, config, results))
+
+    if not baseline:
+        print(f"\n⚠️  未找到 baseline ({baseline_id})")
+        return
+
+    b_val = baseline.get("best_val_loss", 0)
+    b_ppl = baseline.get("perplexity", 0)
+    b_ep = baseline.get("epochs_actual", 0)
+
+    print(f"\n{'=' * 100}")
+    print(f"相对 baseline ({baseline_id}) 的变化（负数=变好 ✅，正数=变差 ❌）")
+    print(f"{'=' * 100}")
+    print(f"{'ID':>10}  {'描述':>28}  {'Val变化':>10}  {'PPL变化':>10}  {'轮次变化':>8}")
+    print("-" * 70)
+
+    for exp_id, config, results in others:
+        desc = config.get("description", config.get("desc", ""))[:28]
+        val = results.get("best_val_loss")
+        ppl = results.get("perplexity")
+        ep = results.get("epochs_actual")
+
+        val_d = f"{val - b_val:+.2f}" if isinstance(val, (int, float)) else "?"
+        ppl_d = f"{ppl / b_ppl:.1%}" if isinstance(ppl, (int, float)) and b_ppl else "?"
+        ep_d = f"{ep - b_ep:+d}" if isinstance(ep, int) else "?"
+
+        print(f"{exp_id:>10}  {desc:>28}  {val_d:>10}  {ppl_d:>10}  {ep_d:>8}")
+
+
+def print_generated(experiments, max_len=120):
+    """打印生成文本"""
+    print(f"\n{'=' * 100}")
     print("生成文本对比")
-    print(f"{'=' * 90}")
+    print(f"{'=' * 100}")
     for exp_id, config, results in experiments:
         gen = results.get("generated", "")
         if gen:
-            print(f"\n  {exp_id} {config.get('desc', '').strip()}:")
-            print(f"    {gen[:120]}")
+            desc = config.get("description", config.get("desc", ""))[:28]
+            print(f"\n  {exp_id} {desc}:")
+            print(f"    {gen[:max_len]}")
+
+
+def print_details(experiments):
+    """打印某次实验的详细信息"""
+    for exp_id, config, results in experiments:
+        print(f"\n{'=' * 60}")
+        print(f"实验: {exp_id}")
+        print(f"{'=' * 60}")
+        print(f"\n配置:")
+        for k, v in config.items():
+            print(f"  {k}: {v}")
+        print(f"\n结果:")
+        for k, v in results.items():
+            print(f"  {k}: {v}")
 
 
 if __name__ == "__main__":
-    experiments = load_all()
-    if not experiments:
-        print("没有找到实验记录。")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="实验对比工具")
+    parser.add_argument("--tags", nargs="+", help="按标签筛选 (e.g. --tags lr-test baseline)")
+    parser.add_argument("--ids", nargs="+", help="按 ID 筛选 (e.g. --ids 001 005)")
+    parser.add_argument("--last", type=int, help="只看最近 N 次")
+    parser.add_argument("--table", choices=["brief", "full"], default="full",
+                        help="显示模式 (brief/full)")
+    parser.add_argument("--detail", action="store_true", help="显示实验完整配置和结果")
+    parser.add_argument("--no-delta", action="store_true", help="不显示变化量")
+    parser.add_argument("--no-gen", action="store_true", help="不显示生成文本")
+    parser.add_argument("--baseline", default="001", help="指定 baseline ID")
+    args = parser.parse_args()
 
-    print_table(experiments)
-    print_deltas(experiments)
-    print_generated(experiments)
+    experiments = load_all()
+    experiments = filter_experiments(experiments, args.tags, args.ids, args.last)
+
+    if args.detail:
+        print_details(experiments)
+    else:
+        print_table(experiments, args.table)
+        if not args.no_delta:
+            print_deltas(experiments, args.baseline)
+        if not args.no_gen:
+            print_generated(experiments)

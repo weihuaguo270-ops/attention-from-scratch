@@ -12,5 +12,14 @@
   "max_len": 64,
   "early_stop": true,
   "patience": 5,
-  "data_stories": 2000
+  "data_stories": 2000,
+  "description": "基准 + 早停 + 最佳模型保存",
+  "script": "train_gpt.py",
+  "source": "终端输出记录",
+  "date": "2026-07-11",
+  "tags": [
+    "early-stop",
+    "best-model"
+  ],
+  "seed": 42
 }

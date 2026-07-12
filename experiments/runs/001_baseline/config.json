@@ -12,5 +12,14 @@
   "max_len": 64,
   "early_stop": false,
   "patience": null,
-  "data_stories": 2000
+  "data_stories": 2000,
+  "description": "基准配置，无优化",
+  "script": "train_gpt.py",
+  "source": "终端输出记录",
+  "date": "2026-07-10",
+  "tags": [
+    "baseline",
+    "no-early-stop"
+  ],
+  "seed": 42
 }

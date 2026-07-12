@@ -185,6 +185,12 @@ def train():
     # 自动记录实验
     _save_experiment_log(
         config={
+            "description": f"train_gpt 自动记录 (d={d_model}, stories={len(stories)})",
+            "script": "train_gpt.py",
+            "source": "自动记录",
+            "date": __import__("datetime").datetime.now().strftime("%Y-%m-%d %H:%M"),
+            "tags": ["auto", f"d{d_model}", f"s{len(stories)}"],
+            "seed": 42,
             "d_model": model.token_embedding.embedding_dim,
             "num_layers": len(model.layers),
             "d_ff": model.layers[0].swiglu.W_gate.out_features,
@@ -220,25 +226,18 @@ def _save_experiment_log(config, results):
         os.path.abspath(__file__))), "experiments", "runs")
     os.makedirs(runs_dir, exist_ok=True)
 
-    # 自动编号
-    existing = [d for d in os.listdir(runs_dir) if os.path.isdir(os.path.join(runs_dir, d))]
-    next_id = f"{len(existing) + 1:03d}"
-    exp_dir = os.path.join(runs_dir, f"{next_id}_auto")
+    # 用时间戳命名，永不重复
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    exp_dir = os.path.join(runs_dir, f"{timestamp}_auto")
     os.makedirs(exp_dir, exist_ok=True)
 
-    log = {
-        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M"),
-        "config": config,
-        "results": results,
-    }
-
     with open(os.path.join(exp_dir, "config.json"), "w", encoding="utf-8") as f:
-        json.dump({**config, "timestamp": log["timestamp"]}, f, indent=2, ensure_ascii=False)
+        json.dump(config, f, indent=2, ensure_ascii=False)
 
     with open(os.path.join(exp_dir, "results.json"), "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 
-    print(f"\\n📝 实验已自动记录到 experiments/runs/{next_id}_auto/")
+    print(f"\n📝 实验已记录到 experiments/runs/{timestamp}_auto/")
 
 
 if __name__ == "__main__":

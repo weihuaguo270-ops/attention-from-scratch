@@ -1,33 +1,68 @@
-# 实验记录
+# 实验记录系统
 
-每次训练实验的配置和结果归档在 `runs/` 目录下。
+每次训练的结果记录在 `runs/` 下。
 
-## 查看方式
+## 目录命名规则
+
+| 来源 | 命名格式 | 示例 |
+|------|---------|------|
+| 旧实验（手动归档） | `{序号}_{描述}/` | `001_baseline/` |
+| 新实验（自动记录） | `{时间戳}_auto/` | `20260711_143021_auto/` |
+
+时间戳永不重复，不会出现命名冲突。
+
+## 对比查看
 
 ```bash
-# 列出所有实验
-ls experiments/runs/
+# 查看全部实验
+python -m experiments.runs.compare
 
-# 查看某次实验的配置
-cat experiments/runs/001_baseline/config.json
+# 只看学习率实验（按标签筛选）
+python -m experiments.runs.compare --tags lr-test
 
-# 查看某次实验的结果
-cat experiments/runs/001_baseline/results.json
+# 只看特定实验（按 ID 筛选）
+python -m experiments.runs.compare --ids 001 005
+
+# 只看最近 2 次
+python -m experiments.runs.compare --last 2
+
+# 简表模式（只看关键数字）
+python -m experiments.runs.compare --table brief
+```
+
+## 实验记录
+
+每个实验目录包含两个文件：
+
+**config.json** — 实验配置
+
+```json
+{
+  "description": "实验目的描述",
+  "script": "train_gpt.py",
+  "source": "自动记录",
+  "date": "2026-07-11",
+  "tags": ["auto", "d64", "s2000"],
+  "d_model": 64,
+  "lr": 0.003,
+  ...
+}
+```
+
+**results.json** — 实验结果
+
+```json
+{
+  "best_val_loss": 3.73,
+  "best_epoch": 4,
+  "perplexity": 41.52,
+  "epochs_actual": 9,
+  "generated": "once upon a time..."
+}
 ```
 
 ## 实验列表
 
-| ID | 名称 | 描述 | 最佳 Val Loss | 困惑度 |
-|----|------|------|--------------|--------|
-| 001 | baseline | 基准配置，60 epoch | 4.19 | 13335 |
-| 002 | small_model | d_model=32，减少参数量 | 5.28 | — |
-| 003 | low_lr | lr=1e-3，学习更慢 | 5.04 | — |
-| 004 | high_lr | lr=1e-2，学习太快 | 6.85 | — |
-| 005 | early_stop | 基准+早停+最佳模型保存 | **3.73** | **41** |
-
-## 关键结论
-
-1. **早停效果最明显**：005 比 001 的 Val Loss 从 4.19 降到 3.73，PPL 从 13335 降到 41
-2. **学习率要适中**：003（lr=1e-3）比 001（lr=3e-3）略好，但 004（lr=1e-2）最差
-3. **小模型抗过拟合**：002（d_model=32）的 Val-Train 差距（3.05）小于 001（5.21）
-4. **早停后只用 9/60 轮**：训练时间节省 85%
+```bash
+python -m experiments.runs.compare --table brief
+```

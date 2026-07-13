@@ -49,7 +49,8 @@ transformer-attention/
 │   ├── cross_attention.py      编码器-解码器交叉注意力
 │   ├── encoder_block.py        Encoder Block
 │   ├── encoder_decoder.py      Encoder-Decoder 完整架构
-│   └── test.py                 36+ 项测试
+│   ├── utils.py                softmax / LayerNorm / head 拆合等
+│   └── test.py                 ~41 项冒烟测试（含 RoPE）
 │
 ├── modern_llm/                 # 现代 LLM 架构（2023-2024）
 │   ├── gqa.py                  Grouped Query Attention
@@ -58,23 +59,27 @@ transformer-attention/
 │   ├── speculative_decoding.py Speculative Decoding 推理加速
 │   ├── attention_sinks.py      StreamingLLM / Attention Sinks
 │   ├── rotary.py               RoPE（独立模块）
-│   └── test.py                 15+ 项测试
+│   ├── utils.py                共享工具
+│   └── test.py                 ~33 项冒烟测试
 │
 ├── experiments/                # 对比实验
 │   ├── compare_attention.py    MHA vs GQA vs MLA：缓存/参数量对比
 │   ├── compare_cache.py        完整缓存 vs StreamingLLM 质量/节省
 │   ├── compare_decoding.py     标准 vs Spec Decoding 加速比
 │   ├── compare_training.py     超参数训练效果对比
+│   ├── benchmark_attention.py  前向耗时微基准（CPU/CUDA）
 │   └── runs/                   实验记录系统（自动存档 + 交互式对比工具）
 │
 ├── pytorch/                    # PyTorch 训练 pipeline
 │   ├── gqa.py                  GQA + RoPE（PyTorch nn.Module）
 │   ├── llama_block.py          RMSNorm + SwiGLU + 完整 GPT 模型
 │   ├── train_gpt.py            训练脚本（交互式/命令行，自动记录实验）
+│   ├── train_transformer.py    原始 Transformer 对照训练
 │   ├── data.py                 TinyStories 数据加载 + 词表构建
+│   ├── test_all.py             PyTorch 侧冒烟测试（~25 项，独立于根目录入口）
 │   └── ...                     各模块的 PyTorch 实现
 │
-├── test_all.py                 统一测试入口（51+ 项）
+├── test_all.py                 统一测试入口（np_impl + modern_llm，约 74 项）
 └── pyproject.toml
 ```
 
@@ -167,12 +172,13 @@ python experiments/runs/compare.py
 ## 测试与基准
 
 ```bash
-# 运行全部 51+ 项测试
+# 运行 np_impl + modern_llm（约 74 项）
 python test_all.py
 
 # 分别运行
-python -m np_impl.test         # 原始 Transformer：36+ 项
-python -m modern_llm.test      # 现代 LLM：15+ 项
+python -m np_impl.test         # 原始 Transformer：~41 项（含 RoPE）
+python -m modern_llm.test      # 现代 LLM：~33 项
+python -m pytorch.test_all     # PyTorch 侧独立冒烟：~25 项
 
 # 实际前向耗时微基准（CI 使用短序列；本地可加长 / 换 GPU）
 python -m experiments.benchmark_attention

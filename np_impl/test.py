@@ -151,6 +151,22 @@ check("值域在[-1,1]", np.all(np.abs(pe) <= 1.0 + 1e-6))
 
 
 # ============================================================
+# 5b. rotary (RoPE)
+# ============================================================
+print("\n【rotary RoPE】")
+from np_impl.rotary import precompute_rotary_frequencies, apply_rotary
+
+d_k = 8
+cos_t, sin_t = precompute_rotary_frequencies(d_k, max_seq_len=16)
+check("RoPE 频率表形状", cos_t.shape == (16, d_k // 2) and sin_t.shape == (16, d_k // 2))
+q = np.random.randn(4, d_k)
+q_rot = apply_rotary(q, cos_t, sin_t)
+check("RoPE 输出形状", q_rot.shape == (4, d_k))
+check("RoPE 输出稳定", np.all(np.isfinite(q_rot)))
+check("RoPE 改变向量", np.linalg.norm(q_rot - q) > 0)
+
+
+# ============================================================
 # 6. transformer_block
 # ============================================================
 print("\n【transformer_block 完整 Block】")

@@ -68,7 +68,8 @@ transformer-attention/
 │   ├── compare_decoding.py     标准 vs Spec Decoding 加速比
 │   ├── compare_training.py     超参数训练效果对比
 │   ├── benchmark_attention.py  前向耗时微基准（CPU/CUDA）
-│   └── runs/                   实验记录系统（自动存档 + 交互式对比工具）
+│   ├── benchmark_mla_absorb.py 解压 vs 吸收路径微基准（导出 CSV）
+│   └── runs/                   实验记录 + mla_absorb_*.csv
 │
 ├── pytorch/                    # PyTorch 训练 pipeline
 │   ├── gqa.py                  GQA + RoPE（PyTorch nn.Module）
@@ -132,17 +133,31 @@ MLA:   c = h · W_DKV,     缓存 c（d_c 维, d_c << d_model）
        K = c · W_UK,       V = c · W_UV（从压缩缓存解压）
 ```
 
-**吸收矩阵技巧（论文概念；本仓库当前实现仍按逐步解压路径计算，吸收优化为规划中）：**
+**吸收矩阵技巧（已实现，推理可用）：**
 ```
-Q · (W_UK · c) = (Q · W_UK) · c    # 理想情况下 W_UK 可吸收到 Q 投影中
+Q_h · (C · W_UK_h) = (Q_h · W_UK_h^T) · C
+attn · (C · W_UV_h) = (attn · C) · W_UV_h
 ```
+`forward_with_cache(..., use_absorb=True)` 走吸收路径；`use_absorb=False` 为逐步解压对照。单测验证两者数值对齐（max|Δ| < 1e-6）。
 
 实际参数（DeepSeek V2, d_model=5120，来自论文量级说明）：
 - MHA 每步缓存：2 × 5120 = 10,240 维
 - MLA 每步缓存：512 + 64 = 576 维
 - **压缩比：约 18x**
 
-> 说明：仓库内训练脚本默认为 TinyStories 级小模型（如 `d_model=64`），用于理解与对照实验，非大规模预训练结果。
+**本机微基准（NumPy CPU，教学规模；完整 CSV 见 `experiments/runs/mla_absorb_20260714.csv`）：**
+
+| 配置 | 解压 ms | 吸收 ms | 加速比 | 对齐 max\|Δ\| |
+|------|--------:|--------:|-------:|-------------:|
+| d=256, h=8, d_c=64, seq=64 | 11.1 | 9.3 | 1.20× | ~1e-18 |
+| d=512, h=8, d_c=128, seq=256 | 425.6 | 76.5 | 5.56× | ~1e-17 |
+
+```bash
+python -m experiments.benchmark_mla_absorb
+python -m experiments.benchmark_mla_absorb --seq_len 256 --d_model 512 --d_c 128 --csv experiments/runs/mla_absorb.csv
+```
+
+> 说明：加速比随序列与压缩比变化；仓库训练脚本仍为 TinyStories 级小模型，非大规模预训练结果。
 
 ### Speculative Decoding
 
@@ -183,6 +198,9 @@ python -m pytorch.test_all     # PyTorch 侧独立冒烟：~25 项
 # 实际前向耗时微基准（CI 使用短序列；本地可加长 / 换 GPU）
 python -m experiments.benchmark_attention
 python -m experiments.benchmark_attention --device cuda --seq_len 2048
+
+# MLA 解压 vs 吸收（NumPy；写出 CSV）
+python -m experiments.benchmark_mla_absorb --seq_len 256 --d_model 512 --d_c 128
 ```
 
 ## 环境要求

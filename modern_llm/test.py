@@ -109,6 +109,25 @@ check("MLA KV Cache 3步生成", len(outputs) == 3)
 check("MLA KV Cache 输出稳定", all(np.all(np.isfinite(o)) for o in outputs))
 check("MLA KV Cache 形状正确", all(o.shape == (1, 8) for o in outputs))
 
+# 吸收路径 vs 解压路径：自回归逐步数值对齐
+np.random.seed(0)
+mla_abs = MultiHeadLatentAttention(d_model=8, num_heads=2, d_k=4, d_c=3, d_kv_rope=2)
+mla_abs.absorb_weights()
+x_seq = np.random.randn(4, 8)
+c_dec = k_dec = None
+c_abs = k_abs = None
+max_diff = 0.0
+for t in range(4):
+    out_d, c_dec, k_dec = mla_abs.forward_with_cache(
+        x_seq[t:t + 1], c_dec, k_dec, positions=np.array([t]), use_absorb=False
+    )
+    out_a, c_abs, k_abs = mla_abs.forward_with_cache(
+        x_seq[t:t + 1], c_abs, k_abs, positions=np.array([t]), use_absorb=True
+    )
+    max_diff = max(max_diff, float(np.max(np.abs(out_d - out_a))))
+check("MLA 吸收≈解压 (max|Δ|<1e-6)", max_diff < 1e-6, f"max_diff={max_diff}")
+check("MLA absorb_weights 形状", mla_abs._absorbed_q[0].shape == (8, 3))
+
 
 # ============================================================
 # 4. Speculative Decoding

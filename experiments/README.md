@@ -10,7 +10,7 @@
 | KV Cache 策略对比 | `compare_cache.py` | 完整缓存 vs StreamingLLM（不同窗口大小） | 缓存节省量、输出质量差异 |
 | 解码策略对比 | `compare_decoding.py` | 标准自回归 vs Speculative Decoding | 加速比、接受率 |
 | 性能基准测试 | `benchmark_attention.py` | MHA vs GQA vs MLA | 实际推理延迟、吞吐量、参数量（CPU/GPU） |
-
+| MLA 吸收微基准 | `benchmark_mla_absorb.py` | 解压路径 vs 吸收路径 | 数值对齐 + 耗时 CSV（`runs/mla_absorb_*.csv`） |
 | 超参数对比 | `compare_training.py` | 不同 lr/head/dim 的训练曲线 | Train/Val Loss 对比图 |
 
 ## 实验记录
@@ -36,3 +36,13 @@ python -m experiments.benchmark_attention --device cuda --seq_len 8192 --d_model
 ```
 
 指标：参数量、每步延迟(ms)、每秒处理 token 数、相对于 MHA 的加速比。
+
+## MLA 吸收路径微基准
+
+```bash
+python -m experiments.benchmark_mla_absorb
+python -m experiments.benchmark_mla_absorb --d_model 512 --d_c 128 --seq_len 256 \
+  --csv experiments/runs/mla_absorb_20260714.csv
+```
+
+输出含：解压/吸收全序列 decode 耗时、加速比、前缀步数值误差、相对 MHA 的 cache 压缩比。示例结果见 `runs/mla_absorb_20260714.csv`。

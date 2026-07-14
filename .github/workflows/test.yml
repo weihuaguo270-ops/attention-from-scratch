@@ -32,6 +32,10 @@ jobs:
         pip install numpy
     - name: Test
       run: python test_all.py
+    - name: PyTorch suite (CPU)
+      run: |
+        pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
+        python pytorch/test_all.py
     - name: Benchmark (CPU)
       run: |
         pip install torch --extra-index-url https://download.pytorch.org/whl/cpu

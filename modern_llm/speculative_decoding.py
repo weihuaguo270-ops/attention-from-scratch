@@ -168,6 +168,11 @@ class SpeculativeDecoder:
             output: (seq_len + generated,) — 完整输出序列
         """
         output = prefix.copy()
+        if len(output) == 0:
+            raise ValueError("prefix must contain at least one token")
+        if max_new_tokens <= 0:
+            self.stats["total_tokens"] = 0
+            return output
 
         while len(output) - len(prefix) < max_new_tokens:
             # ============================================================
@@ -194,8 +199,8 @@ class SpeculativeDecoder:
             prefix_len = len(output)  # 固定当前序列长度
 
             for i in range(len(draft_tokens)):
-                # 目标模型在 draft_tokens[i] 位置的 logits
-                t_logits = target_logits_all[prefix_len + i]
+                # Causal LM 在前一个位置的 logits 预测当前 draft token。
+                t_logits = target_logits_all[prefix_len + i - 1]
                 d_logits = draft_logits_list[i]
 
                 accept, sampled = self._rejection_sample(
@@ -213,7 +218,8 @@ class SpeculativeDecoder:
                     break
 
             # 如果全部接受，额外从 target 采样一个 token
-            if n_accepted == len(draft_tokens):
+            generated = len(output) - len(prefix)
+            if n_accepted == len(draft_tokens) and generated < max_new_tokens:
                 last_logits = target_logits_all[-1]
                 last_probs = softmax(last_logits)
                 extra_token = np.random.choice(len(last_probs), p=last_probs)

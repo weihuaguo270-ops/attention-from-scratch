@@ -143,9 +143,20 @@ decoder = SpeculativeDecoder(draft, target, gamma=3)
 prefix = np.array([1, 5, 3])
 output = decoder.generate(prefix, max_new_tokens=10)
 check("Spec Decoding 输出有新增 token", len(output) > len(prefix))
+check("Spec Decoding 严格遵守 max_new_tokens", len(output) - len(prefix) == 10)
 check("Spec Decoding 输出稳定", np.all(np.isfinite(output)))
 check("Spec Decoding 有 target 前向", decoder.stats["target_calls"] > 0)
 check("Spec Decoding 有 draft 前向", decoder.stats["draft_calls"] > 0)
+
+# draft/target 相同时所有候选必然接受；余额为 1 时不得多生成 token。
+np.random.seed(7)
+same_model = SimpleLM(vocab_size=20, d_model=8, seed=7)
+same_decoder = SpeculativeDecoder(same_model, same_model, gamma=3)
+limited = same_decoder.generate(np.array([1, 2]), max_new_tokens=1)
+check("Spec Decoding 全接受分支不越界", len(limited) == 3)
+
+empty_generation = same_decoder.generate(np.array([1, 2]), max_new_tokens=0)
+check("Spec Decoding 支持生成 0 token", len(empty_generation) == 2)
 
 # 验证 rejection sampling 核心逻辑
 from modern_llm.speculative_decoding import SpeculativeDecoder as SD

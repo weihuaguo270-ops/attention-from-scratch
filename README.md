@@ -161,7 +161,7 @@ python -m experiments.benchmark_mla_absorb --seq_len 256 --d_model 512 --d_c 128
 
 ### Speculative Decoding
 
-小模型（Draft Model）先快速生成 K 个候选 token，大模型在单次前向中并行验证。可实现 2-3x 加速且质量无损。
+小模型（Draft Model）先生成 K 个候选 token，目标模型批量验证并用 rejection sampling 保持目标分布。当前仓库是 NumPy 算法演示；尚未用真实 draft/target 模型验证端到端质量等价或 2-3x 加速。
 
 ### Attention Sinks / StreamingLLM
 

@@ -40,3 +40,22 @@ jobs:
       run: |
         pip install torch --extra-index-url https://download.pytorch.org/whl/cpu
         python -m experiments.benchmark_attention --seq_len 128 --warmup 2 --iter 5
+
+  test-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.11"]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install numpy
+      run: pip install numpy
+    - name: NumPy suites (no PYTHONIOENCODING)
+      shell: powershell
+      run: |
+        Remove-Item Env:PYTHONIOENCODING -ErrorAction SilentlyContinue
+        python test_all.py
